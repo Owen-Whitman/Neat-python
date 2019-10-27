@@ -25,3 +25,4 @@ def mutitateaconnection(net):
         totalconnectiongenes += 2
         totalnodegenes += 1
     print("here")
+

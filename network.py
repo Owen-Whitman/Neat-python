@@ -29,11 +29,14 @@ class network():
                     if(fitgene.innovation_number == unfitgene.innovation_number):
                         cont = True
                         if(random() > 0.5):
-                            self.connectiongenes.append(fitgene)
+                            self.connectiongenes.append(fitgene.copy())
                         else:
-                            self.connectiongenes.append(unfitgene)
+                            self.connectiongenes.append(unfitgene.copy())
                 if(not cont):
+                    print(fitgene.enabled,'before')
                     self.connectiongenes.append(fitgene)
+                    self.connectiongenes[-1].enabled = not self.connectiongenes[-1].enabled
+                    print(fitgene.enabled,'after')
             for unfitgene in unfitparent.connectiongenes:
                 cont = False
                 for fitgene in fitparent.connectiongenes:
@@ -41,6 +44,10 @@ class network():
                         cont = True
                 if(not cont):
                     self.connectiongenes.append(fitgene)
+            for i in fitparent.nodegenes:
+                self.nodegenes.append(i.copy())
+            for i in unfitparent.nodegenes:
+                self.nodegenes.append(i.copy())
             return
         
         for fitgene in fitparent.connectiongenes:
@@ -49,12 +56,12 @@ class network():
                 if(fitgene.innovation_number == unfitgene.innovation_number):
                     cont = True
                     if(random() > 0.5):
-                        self.connectiongenes.append(fitgene)
+                        self.connectiongenes.append(fitgene.copy())
                     else:
-                        self.connectiongenes.append(unfitgene)
+                        self.connectiongenes.append(unfitgene.copy())
             if(not cont):
-                self.connectiongenes.append(fitgene)
-        self.nodegenes = fitparent.nodegenes
+                self.connectiongenes.append(fitgene.copy())
+        self.nodegenes = [i.copy() for i in fitparent.nodegenes]
     
     def addconnection(self, innovationnumber,globalconnectiongenes):
         from_node = randint(0,len(self.nodegenes)-1)
