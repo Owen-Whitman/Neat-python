@@ -6,6 +6,7 @@ class network():
         self.nodegenes = []
         self.connectiongenes = []
         self.fitness = random()
+        self.order = [] #TODO work on order for feedforward
         if(kwargs != {}):
             self.createbabynet(kwargs['parent1'],kwargs['parent2'])
         else:
@@ -63,34 +64,50 @@ class network():
                 self.connectiongenes.append(fitgene.copy())
         self.nodegenes = [i.copy() for i in fitparent.nodegenes]
     
+    def checkforproblem(self,fnumber,tnumber):
+        for i in self.nodegenes:
+            if((fnumber == i.innovation_number and i.type == 'input') or (tnumber == i.innovation_number and i.type == 'input')):
+                return True
+        for i in self.connectiongenes:
+            if(tnumber == i.outnode):
+                if(i.innode == fnumber and i.enabled == False):
+                    return False
+                else:
+                    if(self.checkforproblem(fnumber,i.innode)):
+                        continue
+                    else:
+                        return False
+                
+        
     def addconnection(self, innovationnumber,globalconnectiongenes):
         from_node = randint(0,len(self.nodegenes)-1)
         to_node = randint(0,len(self.nodegenes)-1)
         times = 0
         while True:
             reset = False
-            print(from_node,to_node)
+            if(self.nodegenes[to_node].type == 'input' or self.nodegenes[from_node].type =='output'):
+                placeholer = to_node
+                to_node = from_node
+                from_node = placeholer
             for i in self.connectiongenes:
-                if(i.outnode == self.nodegenes[from_node].innovationnumber and i.innumber == self.nodegenes[to_node].innovationnumber):
+                if(i.outnode == self.nodegenes[from_node].innovation_number and i.innode == self.nodegenes[to_node].innovation_number):
                     reset = True
-                if(i.innode == self.nodegenes[from_node].innovationnumber and i.outnumber == self.nodegenes[to_node].innovationnumber):
+                if(i.innode == self.nodegenes[from_node].innovation_number and i.outnode == self.nodegenes[to_node].innovation_number):
                     reset = True
             if(self.nodegenes[to_node].type == "input" and self.nodegenes[from_node].type == "input"):
                 reset = True
             if(self.nodegenes[to_node].type == "output" and self.nodegenes[from_node].type == "output"):
                 reset = True
-            if(times > 100):
+            if(times > 1000):
                 return 'impossible'
+            if(reset != True and self.checkforproblem(from_node,to_node) == False):
+                reset = True
             if(reset):
                 from_node = randint(0,len(self.nodegenes)-1)
                 to_node = randint(0,len(self.nodegenes)-1)
             else:
                 break
             times += 1
-        if(to_node == 'input' or from_node =='output'):
-            placeholer = to_node
-            to_node = from_node
-            from_node = placeholer
         for genes in globalconnectiongenes:
             if(genes['from'] == from_node and genes['to'] == to_node):
                 innovationnumber = genes['inno']
@@ -99,8 +116,8 @@ class network():
         return {'from':from_node,'to':to_node,'inno':innovationnumber}
     
     def mutitateconnection(self,nodegenesinno,connectiongenesinno,globalsplitconnections):
-        '''if(len(self.connectiongenes)== 0):
-            self.addconnection(connectiongenesinno)'''
+        if(len(self.connectiongenes)== 0):
+            return None
         gene = randint(0,len(self.connectiongenes)-1)
         self.connectiongenes[gene].enabled = False
         for splitconnections in globalsplitconnections:

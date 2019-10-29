@@ -10,7 +10,9 @@ def addaconnection(net):
     global totalconnectiongenes, allconnectiongenes
     print(totalconnectiongenes,'connection')
     ret = net.addconnection(totalconnectiongenes,allconnectiongenes)
-    if(ret not in allconnectiongenes):
+    if(ret == 'impossible'):
+        mutitateaconnection(net)
+    elif(ret not in allconnectiongenes):
         print("not")
         allconnectiongenes.append(ret)
         totalconnectiongenes += 1
@@ -19,10 +21,11 @@ def addaconnection(net):
 def mutitateaconnection(net):
     global totalconnectiongenes, totalnodegenes, allsplitnodes
     ret = net.mutitateconnection(totalnodegenes,totalconnectiongenes,allsplitnodes)
-    if(ret not in allsplitnodes):
+    if(ret == None):
+        addaconnection(net)
+    elif(ret not in allsplitnodes):
         print("not")
         allsplitnodes.append(ret)
         totalconnectiongenes += 2
         totalnodegenes += 1
     print("here")
-
