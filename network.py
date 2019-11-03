@@ -1,8 +1,11 @@
 from node_connection_genes import connectiongenes, nodegenes
 from random import randint, random
+import values
+
 
 class network():
-    def __init__(self,numinputs,numoutputs,**kwargs):
+
+    def __init__(self,**kwargs):
         self.nodegenes = []
         self.connectiongenes = []
         self.fitness = random()
@@ -10,10 +13,11 @@ class network():
         if(kwargs != {}):
             self.createbabynet(kwargs['parent1'],kwargs['parent2'])
         else:
-            for i in range(numinputs):
-                self.nodegenes.append(nodegenes('input',i))
-            for i in range(numinputs,numoutputs+numinputs):
-                self.nodegenes.append(nodegenes('output',i))
+            for i in range(values.numofinputs):
+                self.nodegenes.append(nodegenes('input',i,values.activationfunctioninput))
+
+            for i in range(values.numofinputs,values.numofoutputs+values.numofinputs):
+                self.nodegenes.append(nodegenes('output',i,values.activationfunctionoutinput))
                 
     def createbabynet(self,parent1,parent2):
         if(parent1.fitness>parent2.fitness):
@@ -34,17 +38,15 @@ class network():
                         else:
                             self.connectiongenes.append(unfitgene.copy())
                 if(not cont):
-                    print(fitgene.enabled,'before')
-                    self.connectiongenes.append(fitgene)
-                    self.connectiongenes[-1].enabled = not self.connectiongenes[-1].enabled
-                    print(fitgene.enabled,'after')
+                    self.connectiongenes.append(fitgene.copy())
+                    
             for unfitgene in unfitparent.connectiongenes:
                 cont = False
                 for fitgene in fitparent.connectiongenes:
                     if(fitgene.innovation_number == unfitgene.innovation_number):
                         cont = True
                 if(not cont):
-                    self.connectiongenes.append(fitgene)
+                    self.connectiongenes.append(fitgene.copy())
             for i in fitparent.nodegenes:
                 self.nodegenes.append(i.copy())
             for i in unfitparent.nodegenes:
@@ -63,7 +65,7 @@ class network():
             if(not cont):
                 self.connectiongenes.append(fitgene.copy())
         self.nodegenes = [i.copy() for i in fitparent.nodegenes]
-    
+
     def checkforproblem(self,fnumber,tnumber):
         for i in self.nodegenes:
             if((fnumber == i.innovation_number and i.type == 'input') or (tnumber == i.innovation_number and i.type == 'input')):
@@ -77,8 +79,7 @@ class network():
                         continue
                     else:
                         return False
-                
-        
+                    
     def addconnection(self, innovationnumber,globalconnectiongenes):
         from_node = randint(0,len(self.nodegenes)-1)
         to_node = randint(0,len(self.nodegenes)-1)
@@ -124,7 +125,7 @@ class network():
             if(self.connectiongenes[gene].outnode == splitconnections['from'] and self.connectiongenes[gene].innode == splitconnections['to']):
                 nodegenesinno = splitconnections['nodeinno']
                 connectiongenesinno = splitconnections['connectioninno']
-        self.nodegenes.append(nodegenes('main',nodegenesinno))
+        self.nodegenes.append(nodegenes('main',nodegenesinno,values.activationfunctionmain))
         self.connectiongenes.append(connectiongenes(self.connectiongenes[gene].innode,nodegenesinno,1,True,connectiongenesinno))
         self.connectiongenes.append(connectiongenes(nodegenesinno,self.connectiongenes[gene].outnode,self.connectiongenes[gene].weight,True,connectiongenesinno+1))
         return {'from':self.connectiongenes[gene].outnode,'to':self.connectiongenes[gene].innode,'nodeinno':nodegenesinno,'connectioninno':connectiongenesinno}

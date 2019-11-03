@@ -1,6 +1,6 @@
 from network import network
-numofinputs = 2
-numofoutputs = 2
+import values
+
 totalnodegenes = 4
 totalconnectiongenes = 1
 allconnectiongenes = []
@@ -29,3 +29,6 @@ def mutitateaconnection(net):
         totalconnectiongenes += 2
         totalnodegenes += 1
     print("here")
+
+net = network()
+print(net.feedforward([1,2]))
