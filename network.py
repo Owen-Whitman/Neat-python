@@ -10,15 +10,16 @@ class network():
         self.connectiongenes = []
         self.fitness = random()
         self.order = [] #TODO work on order for feedforward
+        self.nodefromto = {}
         if(kwargs != {}):
             self.createbabynet(kwargs['parent1'],kwargs['parent2'])
         else:
             for i in range(values.numofinputs):
                 self.nodegenes.append(nodegenes('input',i,values.activationfunctioninput))
-
+                self.nodefromto[i] = {}
             for i in range(values.numofinputs,values.numofoutputs+values.numofinputs):
                 self.nodegenes.append(nodegenes('output',i,values.activationfunctionoutinput))
-                
+                self.nodefromto[i] = {}
     def createbabynet(self,parent1,parent2):
         if(parent1.fitness>parent2.fitness):
             fitparent = parent1
@@ -90,6 +91,8 @@ class network():
                 placeholer = to_node
                 to_node = from_node
                 from_node = placeholer
+            if(from_node == to_node):
+                reset = True
             for i in self.connectiongenes:
                 if(i.outnode == self.nodegenes[from_node].innovation_number and i.innode == self.nodegenes[to_node].innovation_number):
                     reset = True
@@ -113,19 +116,66 @@ class network():
             if(genes['from'] == from_node and genes['to'] == to_node):
                 innovationnumber = genes['inno']
                 break
-        self.connectiongenes.append(connectiongenes(from_node,to_node,random(),True,innovationnumber))
+        weight = random()
+        self.nodefromto[to_node][from_node] = weight
+        self.connectiongenes.append(connectiongenes(from_node,to_node,weight,True,innovationnumber))
+        self.sort()
         return {'from':from_node,'to':to_node,'inno':innovationnumber}
     
     def mutitateconnection(self,nodegenesinno,connectiongenesinno,globalsplitconnections):
         if(len(self.connectiongenes)== 0):
             return None
         gene = randint(0,len(self.connectiongenes)-1)
+        while not self.connectiongenes[gene].enabled:
+            gene = randint(0,len(self.connectiongenes)-1)
         self.connectiongenes[gene].enabled = False
+        del self.nodefromto[self.connectiongenes[gene].outnode][self.connectiongenes[gene].innode]
         for splitconnections in globalsplitconnections:
             if(self.connectiongenes[gene].outnode == splitconnections['from'] and self.connectiongenes[gene].innode == splitconnections['to']):
+                if( splitconnections['nodeinno']in self.nodegenes and  splitconnections['connectioninno'] in self.connectiongenes):
+                    print("HEIUHIHJKFH:DAS")
+                    return None
                 nodegenesinno = splitconnections['nodeinno']
                 connectiongenesinno = splitconnections['connectioninno']
         self.nodegenes.append(nodegenes('main',nodegenesinno,values.activationfunctionmain))
+        self.nodefromto[nodegenesinno] = {self.connectiongenes[gene].innode:1}
+        self.nodefromto[self.connectiongenes[gene].outnode][nodegenesinno] = self.connectiongenes[gene].weight
         self.connectiongenes.append(connectiongenes(self.connectiongenes[gene].innode,nodegenesinno,1,True,connectiongenesinno))
         self.connectiongenes.append(connectiongenes(nodegenesinno,self.connectiongenes[gene].outnode,self.connectiongenes[gene].weight,True,connectiongenesinno+1))
+        self.sort()
         return {'from':self.connectiongenes[gene].outnode,'to':self.connectiongenes[gene].innode,'nodeinno':nodegenesinno,'connectioninno':connectiongenesinno}
+    
+    def feedforward(self,inputs):
+        print(self.order,self.nodefromto)
+        alikes = {}
+        for i in self.nodegenes:
+            alikes[i.innovation_number] = i
+        values = {}
+        output = []
+        for i in self.order:
+            if(alikes[i].type == 'input'):
+                values[i] = inputs[i]
+                continue
+            
+            
+            
+            if(alikes[i].type == 'output'):
+                values[i] = inputs[i]
+                continue
+            
+                
+    
+    def sort(self):
+        order = [i.innovation_number for i in self.nodegenes]
+        while True:
+            brake = True
+            for i in order:
+                for b in self.nodefromto[i]:
+                    if(order.index(b)>order.index(i)):
+                        brake = False
+                        order.remove(i)
+                        order.insert(order.index(b)+1,i)
+            if(brake):
+                break
+        print(order,"SHJFA")
+        self.order = order

@@ -13,10 +13,9 @@ def addaconnection(net):
     if(ret == 'impossible'):
         mutitateaconnection(net)
     elif(ret not in allconnectiongenes):
-        print("not")
         allconnectiongenes.append(ret)
         totalconnectiongenes += 1
-    print("here")
+
         
 def mutitateaconnection(net):
     global totalconnectiongenes, totalnodegenes, allsplitnodes
@@ -24,11 +23,19 @@ def mutitateaconnection(net):
     if(ret == None):
         addaconnection(net)
     elif(ret not in allsplitnodes):
-        print("not")
         allsplitnodes.append(ret)
         totalconnectiongenes += 2
         totalnodegenes += 1
-    print("here")
+
 
 net = network()
-print(net.feedforward([1,2]))
+addaconnection(net)
+addaconnection(net)
+addaconnection(net)
+addaconnection(net)
+mutitateaconnection(net)
+mutitateaconnection(net)
+mutitateaconnection(net)
+mutitateaconnection(net)
+print(net.nodegenes,net.connectiongenes)
+net.feedforward([1,2])
