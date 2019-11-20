@@ -156,12 +156,17 @@ class network():
             if(alikes[i].type == 'input'):
                 values[i] = inputs[i]
                 continue
-            
-            
-            
-            if(alikes[i].type == 'output'):
-                values[i] = inputs[i]
-                continue
+            print(self.nodefromto[i],i,"i")
+            total = 0
+            for b in self.nodefromto[i]:
+                print(b,self.nodefromto[i][b],values[b])
+                total += values[b] * self.nodefromto[i][b]
+            print(total,alikes[i].activation(total),"total")
+            values[i] =  alikes[i].activation(total)
+            '''if(alikes[i].type == 'output'):
+                values[i] = [i]
+                continue'''
+        print(values[2],values[3])
             
                 
     
