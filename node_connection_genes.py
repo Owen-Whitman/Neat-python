@@ -14,7 +14,6 @@ class connectiongenes():
 class nodegenes():
     def __init__(self,types,innovation_number,activation):
         self.type = types
-        self.value = 0
         self.innovation_number = innovation_number
         try:
             self.activation = a.get(activation)

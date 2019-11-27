@@ -1,5 +1,5 @@
 from node_connection_genes import connectiongenes, nodegenes
-from random import randint, random
+from random import randint, random,uniform
 import values
 
 
@@ -9,7 +9,7 @@ class network():
         self.nodegenes = []
         self.connectiongenes = []
         self.fitness = random()
-        self.order = [] #TODO work on order for feedforward
+        self.order = [] 
         self.nodefromto = {}
         if(kwargs != {}):
             self.createbabynet(kwargs['parent1'],kwargs['parent2'])
@@ -20,6 +20,7 @@ class network():
             for i in range(values.numofinputs,values.numofoutputs+values.numofinputs):
                 self.nodegenes.append(nodegenes('output',i,values.activationfunctionoutinput))
                 self.nodefromto[i] = {}
+    
     def createbabynet(self,parent1,parent2):
         if(parent1.fitness>parent2.fitness):
             fitparent = parent1
@@ -36,10 +37,16 @@ class network():
                         cont = True
                         if(random() > 0.5):
                             self.connectiongenes.append(fitgene.copy())
+                            if(not fitgene.enabled and random() > values.inherit_desabled):
+                                self.connectiongenes[-1].enabled = True
                         else:
                             self.connectiongenes.append(unfitgene.copy())
+                            if(not fitgene.enabled and random() > values.inherit_desabled):
+                                self.connectiongenes[-1].enabled = True
                 if(not cont):
                     self.connectiongenes.append(fitgene.copy())
+                    if(not fitgene.enabled and random() > values.inherit_desabled):
+                        self.connectiongenes[-1].enabled = True
                     
             for unfitgene in unfitparent.connectiongenes:
                 cont = False
@@ -48,6 +55,8 @@ class network():
                         cont = True
                 if(not cont):
                     self.connectiongenes.append(fitgene.copy())
+                    if(not fitgene.enabled and random() > values.inherit_desabled):
+                        self.connectiongenes[-1].enabled = True
             for i in fitparent.nodegenes:
                 self.nodegenes.append(i.copy())
             for i in unfitparent.nodegenes:
@@ -61,10 +70,17 @@ class network():
                     cont = True
                     if(random() > 0.5):
                         self.connectiongenes.append(fitgene.copy())
+                        if(random() > values.inherit_desabled and not fitgene.enabled):
+                            self.connectiongenes[-1].enabled = True
                     else:
                         self.connectiongenes.append(unfitgene.copy())
+                        if(random() > values.inherit_desabled and not fitgene.enabled):
+                            self.connectiongenes[-1].enabled = True
             if(not cont):
                 self.connectiongenes.append(fitgene.copy())
+                if(not fitgene.enabled and random() > values.inherit_desabled):
+                    self.connectiongenes[-1].enabled = True
+                        
         self.nodegenes = [i.copy() for i in fitparent.nodegenes]
 
     def checkforproblem(self,fnumber,tnumber):
@@ -110,13 +126,15 @@ class network():
                 from_node = randint(0,len(self.nodegenes)-1)
                 to_node = randint(0,len(self.nodegenes)-1)
             else:
+                from_node = self.nodegenes[from_node].innovation_number
+                to_node = self.nodegenes[to_node].innovation_number
                 break
             times += 1
         for genes in globalconnectiongenes:
             if(genes['from'] == from_node and genes['to'] == to_node):
                 innovationnumber = genes['inno']
                 break
-        weight = random()
+        weight = uniform(values.weightminmax[0],values.weightminmax[1])
         self.nodefromto[to_node][from_node] = weight
         self.connectiongenes.append(connectiongenes(from_node,to_node,weight,True,innovationnumber))
         self.sort()
@@ -150,28 +168,41 @@ class network():
         alikes = {}
         for i in self.nodegenes:
             alikes[i.innovation_number] = i
-        values = {}
+        value = {}
         output = []
         for i in self.order:
             if(alikes[i].type == 'input'):
-                values[i] = inputs[i]
+                value[i] = inputs[i]
                 continue
-            print(self.nodefromto[i],i,"i")
             total = 0
             for b in self.nodefromto[i]:
-                print(b,self.nodefromto[i][b],values[b])
-                total += values[b] * self.nodefromto[i][b]
-            print(total,alikes[i].activation(total),"total")
-            values[i] =  alikes[i].activation(total)
-            '''if(alikes[i].type == 'output'):
-                values[i] = [i]
-                continue'''
-        print(values[2],values[3])
+                total += value[b] * self.nodefromto[i][b]
+            value[i] =  alikes[i].activation(total)
+        print(value[2],value[3])
+        return [value[values.numofinputs + i] for i in range(values.numofoutputs)]
+
+    def mutitate(self):
+        if(random()<values.weight_prebutered_chance):
+            print("changing weights")
+            for i in self.connectiongenes:
+                if(random()<= values.weight_random_chance):
+                    i.weight = uniform(values.weightminmax[0],values.weightminmax[1])
+                    self.nodefromto[i.outnode][i.innode] = i.weight
+                else:
+                    i.weight = uniform(i.weight-values.weight_prebuted_added,i.weight+values.weight_prebuted_added)
+                    self.nodefromto[i.outnode][i.innode] = i.weight
+        
+        if(values.added_connection_chace <= random()):  
+            print("addedconnection")   
+            values.addaconnection(self)
             
-                
+        if(values.mutitate_connection_chace <= random()):   
+            print('mutitatedconnectons')  
+            values.mutitateaconnection(self)
     
     def sort(self):
         order = [i.innovation_number for i in self.nodegenes]
+        print(order)
         while True:
             brake = True
             for i in order:
@@ -182,5 +213,4 @@ class network():
                         order.insert(order.index(b)+1,i)
             if(brake):
                 break
-        print(order,"SHJFA")
         self.order = order
