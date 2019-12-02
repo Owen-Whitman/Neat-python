@@ -9,8 +9,9 @@ class network():
         self.nodegenes = []
         self.connectiongenes = []
         self.fitness = random()
-        self.order = [] 
+        self.order = [0,1,2,3] 
         self.nodefromto = {}
+        self.score = 0
         if(kwargs != {}):
             self.createbabynet(kwargs['parent1'],kwargs['parent2'])
         else:
@@ -20,6 +21,13 @@ class network():
             for i in range(values.numofinputs,values.numofoutputs+values.numofinputs):
                 self.nodegenes.append(nodegenes('output',i,values.activationfunctionoutinput))
                 self.nodefromto[i] = {}
+            for b in range(0,values.numofinputs,1):
+                weight = uniform(values.weightminmax[0],values.weightminmax[1])
+                print(self.nodefromto)
+                self.nodefromto[3][b] = weight
+                print(b,"IIIII")
+                self.connectiongenes.append(connectiongenes(b,3,uniform(-2,2),True,i))
+
     
     def createbabynet(self,parent1,parent2):
         if(parent1.fitness>parent2.fitness):
@@ -164,7 +172,6 @@ class network():
         return {'from':self.connectiongenes[gene].outnode,'to':self.connectiongenes[gene].innode,'nodeinno':nodegenesinno,'connectioninno':connectiongenesinno}
     
     def feedforward(self,inputs):
-        print(self.order,self.nodefromto)
         alikes = {}
         for i in self.nodegenes:
             alikes[i.innovation_number] = i
@@ -178,7 +185,7 @@ class network():
             for b in self.nodefromto[i]:
                 total += value[b] * self.nodefromto[i][b]
             value[i] =  alikes[i].activation(total)
-        print(value[2],value[3])
+        print(inputs, [value[values.numofinputs + i] for i in range(values.numofoutputs)])
         return [value[values.numofinputs + i] for i in range(values.numofoutputs)]
 
     def mutitate(self):
@@ -202,7 +209,7 @@ class network():
     
     def sort(self):
         order = [i.innovation_number for i in self.nodegenes]
-        print(order)
+        print(order,"sorting",self.nodefromto)
         while True:
             brake = True
             for i in order:
@@ -213,4 +220,6 @@ class network():
                         order.insert(order.index(b)+1,i)
             if(brake):
                 break
+            #print(order)
+        print("donesorting",order)
         self.order = order

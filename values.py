@@ -1,9 +1,9 @@
-numofinputs = 2
-numofoutputs = 2
+numofinputs = 3
+numofoutputs = 1
 
-activationfunctioninput = 'identity'
-activationfunctionmain = 'identity'
-activationfunctionoutinput = 'identity'
+activationfunctioninput = 'sigmoid'
+activationfunctionmain = 'sigmoid'
+activationfunctionoutinput = 'sigmoid'
 
 weightminmax = [-2,2]
 
@@ -19,9 +19,12 @@ weight_prebuted_added = 0.2
 weight_random_chance = 0.1
 n = 1
 
+populationsize = 10
+closeness = 3
+
 totalnodegenes = 4
-totalconnectiongenes = 1
-allconnectiongenes = []
+totalconnectiongenes = 4
+allconnectiongenes = [{'from':0,'to':3,'inno':0},{'from':1,'to':3,'inno':1},{'from':2,'to':3,'inno':2}]
 allsplitnodes = []
 
 def addaconnection(net):
