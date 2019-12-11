@@ -52,26 +52,29 @@ def createtestnet():
 
 for i in range(5):
     a = network()
+    '''
     for i in a.nodegenes:
         print(i.innovation_number,i.type)
     
     for i in a.connectiongenes:
-        print(i.innode,i.outnode,i.weight,i.enabled,i.innovation_number)
+        print(i.innode,i.outnode,i.weight,i.enabled,i.innovation_number)'''
     allnetworks.append(a)
 
 for mainstuff in range(0,1):
     print(mainstuff)
-    for i in allnetworks:
+    for i in range(len(allnetworks)-1,-1,-1):
         found = False
         for b in allspecies:
-            if(closeness(i,b.rep) < values.closeness):
-                b.members.append(i)
+            if(closeness(allnetworks[i],b.rep) < values.closeness):
+                b.members.append(allnetworks[i])
                 found = True
+                break
         if(not found):
-            print(species)
-            allspecies.append(species(i))
-        allnetworks.remove(i)
+            allspecies.append(species(allnetworks[i]))
+        allnetworks.pop(i)
     print("sorted")
+    print(allnetworks,allspecies)
+
     avg = 0 
     for i in allspecies:
         if(len(i.members) == 0): 
@@ -86,6 +89,8 @@ for mainstuff in range(0,1):
         i.evaluate()
         avg += i.evaluate()
     for i in allspecies:
-        i.mutitate(avg)
+        for b in i.mutitate(avg):
+            allnetworks.append(b)
+
     print(allnetworks,allspecies)
 

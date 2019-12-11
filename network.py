@@ -23,12 +23,9 @@ class network():
                 self.nodefromto[i] = {}
             for b in range(0,values.numofinputs,1):
                 weight = uniform(values.weightminmax[0],values.weightminmax[1])
-                print(self.nodefromto)
                 self.nodefromto[3][b] = weight
-                print(b,"IIIII")
                 self.connectiongenes.append(connectiongenes(b,3,uniform(-2,2),True,i))
 
-    
     def createbabynet(self,parent1,parent2):
         if(parent1.fitness>parent2.fitness):
             fitparent = parent1
