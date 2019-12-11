@@ -20,7 +20,7 @@ class species():
             self.members_score[i] = score
             self.speciesavg += score
         self.prevbestscore.append(best)
-        return self.speciesavg
+        return self.speciesavg, best
 
     def mutitate(self,globalavg):
         ret_nets = []
