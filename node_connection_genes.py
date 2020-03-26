@@ -1,5 +1,5 @@
 import activations
-
+from copy import deepcopy
 a = activations.ActivationFunctionSet()
 class connectiongenes():
     def __init__(self,innode,outnode,weight,enabled,innovation):
@@ -9,10 +9,12 @@ class connectiongenes():
         self.enabled = enabled
         self.innovation_number = innovation
     def copy(self):
-        return connectiongenes(self.innode,self.outnode,self.weight,self.enabled,self.innovation_number)
+        return deepcopy(self)
 
 class nodegenes():
-    def __init__(self,types,innovation_number,activation):
+    def __init__(self,types,innovation_number,activation,location):
+        self.location = location
+        self.value = 0
         self.type = types
         self.innovation_number = innovation_number
         self.activation_name = activation
@@ -22,4 +24,4 @@ class nodegenes():
             print(a.get(activation))
 
     def copy(self):
-        return nodegenes(self.type,self.innovation_number,self.activation_name)
+        return deepcopy(self)

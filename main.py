@@ -1,12 +1,13 @@
 from network import network
 from species import species
 import values
-
+import pickle
+from examples.xor import run 
+from copy import deepcopy
 allnetworks = []
 allspecies = []
 
 def closeness(net1, net2):
-    print(net1.nodefromto,net2.nodefromto)
     alike = 0
     alike_weightdifference = 0
     disjoint = 0 
@@ -44,24 +45,31 @@ def createtestnet():
     net = network()
     values.addaconnection(net)
     values.addaconnection(net)
-    values.addaconnection(net)
-    values.addaconnection(net)
     values.mutitateaconnection(net)
-    net.mutitate()
+    values.addaconnection(net)
+    values.addaconnection(net)
+    #net.mutitate()
     return net
 
-for i in range(5):
-    a = network()
-    '''
-    for i in a.nodegenes:
-        print(i.innovation_number,i.type)
-    
-    for i in a.connectiongenes:
-        print(i.innode,i.outnode,i.weight,i.enabled,i.innovation_number)'''
-    allnetworks.append(a)
+def save(gen,best):
 
-for mainstuff in range(0,1):
-    print(mainstuff)
+    class Container(object):
+        def __init__(self,allspecies,best,gen):
+            self.allspecies = allspecies
+            self.best = best
+            self.gen = gen
+    cont = Container(allspecies,best,gen)
+    with open("saved_bests/"+str(gen)+"xor"+".pk1",'wb') as pickle_file:
+        pickle.dump(cont,pickle_file)
+
+for i in range(values.populationsize):
+    allnetworks.append(network())
+sizeofpop = values.populationsize
+generation = 1
+
+
+
+for mainstuff in range(0,100):
     for i in range(len(allnetworks)-1,-1,-1):
         found = False
         for b in allspecies:
@@ -72,25 +80,59 @@ for mainstuff in range(0,1):
         if(not found):
             allspecies.append(species(allnetworks[i]))
         allnetworks.pop(i)
-    print("sorted")
-    print(allnetworks,allspecies)
-
+        
+    if(len(allspecies)<values.species_target):
+        values.closeness -= 0.3
+    elif(len(allspecies)>values.species_target):
+        values.closeness += 0.3
+    if(values.closeness<0.3):
+        values.closeness = 0.3
+    print("added")
+    print("numofspecies", len(allspecies))
     avg = 0 
-    for i in allspecies:
-        if(len(i.members) == 0): 
-            allnetworks.append(i.members)
-            allspecies.remove(i)
+    best = 0
+    for i in range(len(allspecies)-1,-1,-1):
+        if(len(allspecies[i].members) <= 1): 
+            allspecies.pop(i)
             continue
-        if(len(i.prevbestscore)>=15 and max(i.prevbestscore[:len(i.prevbestscore)-14])>= max(i.prevbestscore[len(i.prevbestscore)-14:])):
-            allnetworks.append(i.members)
-            allspecies.remove(i)
+        if(len(allspecies[i].prevbestfitness)>=15 and max(allspecies[i].prevbestfitness[:len(allspecies[i].prevbestfitness)-14])>= max(allspecies[i].prevbestfitness[len(allspecies[i].prevbestfitness)-14:])):
+            for b in allspecies[i].members:
+                allnetworks.append(b)
+            allspecies.pop(i)
             continue
-        print("evaulating")
-        i.evaluate()
-        avg += i.evaluate()
+
     for i in allspecies:
-        for b in i.mutitate(avg):
-            allnetworks.append(b)
+        a = i.evaluate()
+        avg += a[0]
+        if(best == 0 or a[1].fitness > best.fitness):
+            best = a[1]
+    print("evaluated")
+    print("size of prev pop", sizeofpop)
+    print("numofspecies", len(allspecies))
+    
+    print("gen"+str(mainstuff))
+    '''if(mainstuff%10 == 0):
+        best.draw("gen"+str(mainstuff))'''
+    print(best)
+    print(best.fitness)
 
-    print(allnetworks,allspecies)
+    runerup = run(best)
+    print(runerup)
+    if(runerup> 3.5):
+        print("done")
+        best.draw("gen"+str(mainstuff))
+        break
+    
+    for i in allspecies:
 
+        allnetworks.extend(i.mutitate(avg))
+
+    sizeofpop = len(allnetworks)
+    generation += 1
+    print("mutitated")
+    print(" ")
+
+print("  ")
+print("done")
+print(run(best))
+print(best.fitness)
