@@ -13,6 +13,8 @@ class network():
         self.layers = {'0.0':[],'1.0':[]}
         self.fitness = 0
         self.fullfitness = 0
+        self.enabledgenes = []
+        self.disabledgenes = {}
         if(kwargs != {}):
             self.createbabynet(kwargs['parent1'],kwargs['parent2'])
         else:
@@ -29,8 +31,8 @@ class network():
             for b in range(0,values.numofinputs,1):
                 weight = uniform(values.weightminmax[0],values.weightminmax[1])
                 self.nodefromto[3][b] = weight
-
-                self.connectiongenes.append(connectiongenes(b,3,weight,True,b))
+                self.connectiongenes.append(values.allconnectiongenes[b]['class'])
+                self.enabledgenes.append(values.allconnectiongenes[b]['class'])
 
     def createbabynet(self,parent1,parent2):
         if(parent1.fitness>parent2.fitness):
@@ -38,78 +40,9 @@ class network():
             unfitparent = parent2
         else:
             fitparent = parent2
-            unfitparent = parent2
-        if(fitparent.fitness == unfitparent.fitness):
-            for fitgene in fitparent.connectiongenes:
-                cont = False
-                for unfitgene in unfitparent.connectiongenes:
-                    if(fitgene.innovation_number == unfitgene.innovation_number):
-                        cont = True
-                        if(random() > 0.5):
-                            self.connectiongenes.append(fitgene.copy())
-                            if(not fitgene.enabled and random() < values.inherit_desabled):
-                                self.connectiongenes[-1].enabled = True
-                        else:
-                            self.connectiongenes.append(unfitgene.copy())
-                            if(not fitgene.enabled and random() < values.inherit_desabled):
-                                self.connectiongenes[-1].enabled = True
-                        break
-                if(not cont):
-                    self.connectiongenes.append(fitgene.copy())
-                    if(not fitgene.enabled and random() < values.inherit_desabled):
-                        self.connectiongenes[-1].enabled = True
-            for unfitgene in unfitparent.connectiongenes:
-                cont = False
-                for fitgene in fitparent.connectiongenes:
-                    if(fitgene.innovation_number == unfitgene.innovation_number):
-                        cont = True
-                        break
-                if(not cont):
-                    self.connectiongenes.append(fitgene.copy())
-                    if(not fitgene.enabled and random() < values.inherit_desabled):
-                        self.connectiongenes[-1].enabled = True
-            for i in fitparent.nodegenes:
-                self.nodegenes.append(i.copy())
-            for i in unfitparent.nodegenes:
-                add = True
-                for b in fitparent.nodegenes:
-                    if(i.innovation_number == b.innovation_number):
-                        add=False
-                        break
-                if(add):
-                    self.nodegenes.append(i.copy())
-            for i in self.nodegenes:
-                self.nodefromto[i.innovation_number] = {}
-                self.alikes[i.innovation_number] = i
-                if(i.location in self.layers):
-                    self.layers[i.location].append(i.innovation_number)
-                else:
-                    self.layers[i.location] = [i.innovation_number]
-            for i in self.connectiongenes:
-                if(i.enabled):
-                    self.nodefromto[i.outnode][i.innode] = i.weight
-            self.sort()
-            return
-        
-        for fitgene in fitparent.connectiongenes:
-
-            cont = False
-            for unfitgene in unfitparent.connectiongenes:
-                if(fitgene.innovation_number == unfitgene.innovation_number):
-                    cont = True
-                    if(random() > 0.5):
-                        self.connectiongenes.append(fitgene.copy())
-                        if(random() > values.inherit_desabled and not fitgene.enabled):
-                            self.connectiongenes[-1].enabled = True
-                    else:
-                        self.connectiongenes.append(unfitgene.copy())
-                        if(random() > values.inherit_desabled and not fitgene.enabled):
-                            self.connectiongenes[-1].enabled = True
-            if(not cont):
-                self.connectiongenes.append(fitgene.copy())
-                if(not fitgene.enabled and random() > values.inherit_desabled):
-                    self.connectiongenes[-1].enabled = True
-                        
+            unfitparent = parent1
+            
+            
         self.nodegenes = [i.copy() for i in fitparent.nodegenes]
         for i in self.nodegenes:
             self.nodefromto[i.innovation_number] = {}
@@ -118,17 +51,52 @@ class network():
                 self.layers[i.location].append(i.innovation_number)
             else:
                 self.layers[i.location] = [i.innovation_number]
+        
+        for fitgene in fitparent.connectiongenes:
+            cont = False
+            self.connectiongenes.append(fitgene)
+            if(fitgene in unfitparent.connectiongenes):
+                if(random() < 0.5):
 
-        for i in self.connectiongenes:
-            if(i.enabled):
-                self.nodefromto[i.outnode][i.innode] = i.weight
+                    if(fitgene in fitparent.enabledgenes):
+                        self.enabledgenes.append(fitgene)
+                        self.nodefromto[fitgene.outnode][fitgene.innode] = fitparent.nodefromto[fitgene.outnode][fitgene.innode]
+                    elif(random() > values.inherit_desabled):
+                        self.enabledgenes.append(fitgene)
+                        self.nodefromto[fitgene.outnode][fitgene.innode] = fitparent.disabledgenes[fitgene]
+                    else:
+                        self.disabledgenes[fitgene] = fitparent.disabledgenes[fitgene]         
+                else:
 
+                    if(fitgene in unfitparent.enabledgenes):
+
+                        self.enabledgenes.append(fitgene)
+                        self.nodefromto[fitgene.outnode][fitgene.innode] = unfitparent.nodefromto[fitgene.outnode][fitgene.innode]
+
+                    elif(random() > values.inherit_desabled):
+
+                        self.enabledgenes.append(fitgene)
+                        self.nodefromto[fitgene.outnode][fitgene.innode] = unfitparent.disabledgenes[fitgene]
+
+                    else:
+                        self.disabledgenes[fitgene] = unfitparent.disabledgenes[fitgene]
+            else:
+                if(fitgene in fitparent.enabledgenes):
+                    self.enabledgenes.append(fitgene)
+                    self.nodefromto[fitgene.outnode][fitgene.innode] = fitparent.nodefromto[fitgene.outnode][fitgene.innode]
+                elif(random() > values.inherit_desabled):
+                    self.enabledgenes.append(fitgene)
+                    self.nodefromto[fitgene.outnode][fitgene.innode] = fitparent.disabledgenes[fitgene]
+                else:
+                    self.disabledgenes[fitgene] = fitparent.disabledgenes[fitgene] 
+                        
         self.sort()
                    
     def addconnection(self, innovationnumber,globalconnectiongenes):
         from_node = randint(0,len(self.nodegenes)-1)
         to_node = randint(0,len(self.nodegenes)-1)
         times = 0
+        changedinnovationnumber = -1
         while True:
             reset = False
             if((self.nodegenes[to_node].type == 'input' or self.nodegenes[from_node].type =='output') or (float(self.nodegenes[to_node].location) < float(self.nodegenes[from_node].location))):
@@ -144,14 +112,14 @@ class network():
             if(not reset and (float(self.nodegenes[to_node].location) == float(self.nodegenes[from_node].location))):
                 reset = True
             if(times > 1000):
+
                 return 'impossible'
             if(not reset):
-                for i in self.connectiongenes:
-                    if(i.enabled):
-                        if(i.outnode == self.nodegenes[from_node].innovation_number and i.innode == self.nodegenes[to_node].innovation_number):
-                            reset = True
-                        if(i.innode == self.nodegenes[from_node].innovation_number and i.outnode == self.nodegenes[to_node].innovation_number):
-                            reset = True
+                for i in self.enabledgenes: 
+                    if(i.outnode == self.nodegenes[from_node].innovation_number and i.innode == self.nodegenes[to_node].innovation_number):
+                        reset = True
+                    if(i.innode == self.nodegenes[from_node].innovation_number and i.outnode == self.nodegenes[to_node].innovation_number):
+                        reset = True
             if(reset):
                 from_node = randint(0,len(self.nodegenes)-1)
                 to_node = randint(0,len(self.nodegenes)-1)
@@ -160,35 +128,89 @@ class network():
                 to_node = self.nodegenes[to_node].innovation_number
                 break
             times += 1
+        
         for genes in globalconnectiongenes:
             if(genes['from'] == from_node and genes['to'] == to_node):
                 innovationnumber = genes['inno']
+                changedinnovationnumber = 1
                 break
-        weight = uniform(values.weightminmax[0],values.weightminmax[1])
-        self.nodefromto[to_node][from_node] = weight
-        self.connectiongenes.append(connectiongenes(from_node,to_node,weight,True,innovationnumber))
-        return {'from':from_node,'to':to_node,'inno':innovationnumber}
-    
+
+        
+        
+        if(changedinnovationnumber == -1):
+            clas = connectiongenes(from_node,to_node,innovationnumber)
+            self.connectiongenes.append(clas)
+            self.enabledgenes.append(clas)
+            weight = uniform(values.weightminmax[0],values.weightminmax[1])
+            self.nodefromto[to_node][from_node] = weight
+            return {'from':from_node,'to':to_node,'inno':innovationnumber,'class':clas}
+        else:
+            clas = values.allconnectiongenes[innovationnumber]['class']
+            if(clas in self.connectiongenes):
+                if(clas not in self.enabledgenes):
+                    self.enabledgenes.append(clas)
+                    self.nodefromto[to_node][from_node] = self.disabledgenes[clas]
+                    self.disabledgenes.pop(clas)
+                    return None
+                else:
+                    return None
+            else:
+                weight = uniform(values.weightminmax[0],values.weightminmax[1])
+                self.nodefromto[to_node][from_node] = weight
+                self.connectiongenes.append(clas)
+                self.enabledgenes.append(clas)
+                return None
+          
     def mutitateconnection(self,nodegenesinno,connectiongenesinno,globalsplitconnections):
         if(len(self.connectiongenes)== 0):
             return None
         gene = randint(0,len(self.connectiongenes)-1)
-        while not self.connectiongenes[gene].enabled:
-            gene = randint(0,len(self.connectiongenes)-1)
-        del self.nodefromto[self.connectiongenes[gene].outnode][self.connectiongenes[gene].innode]
-        self.connectiongenes[gene].enabled = False    
+        
+        if(self.connectiongenes[gene] in self.enabledgenes):
+            self.disabledgenes[self.connectiongenes[gene]] = self.nodefromto[self.connectiongenes[gene].outnode][self.connectiongenes[gene].innode]
+            prevweight = self.nodefromto[self.connectiongenes[gene].outnode][self.connectiongenes[gene].innode]
+            del self.nodefromto[self.connectiongenes[gene].outnode][self.connectiongenes[gene].innode]
+            self.enabledgenes.remove(self.connectiongenes[gene]) 
+        else:
+            prevweight = self.disabledgenes[self.connectiongenes[gene]]
+
+        
+        
+        
         for splitconnections in globalsplitconnections:
-            if(self.connectiongenes[gene].outnode == splitconnections['from'] and self.connectiongenes[gene].innode == splitconnections['to']):
-                if( splitconnections['nodeinno']in self.nodegenes and  splitconnections['connectioninno'] in self.connectiongenes):
-                    return None
-                nodegenesinno = splitconnections['nodeinno']
-                connectiongenesinno = splitconnections['connectioninno']
+            if(self.connectiongenes[gene].innode == splitconnections['from'] and self.connectiongenes[gene].outnode == splitconnections['to']):
+                print("here")
+                if((splitconnections['connection1class'] in self.connectiongenes and splitconnections['connection2class'] in self.connectiongenes)):
+                    return "Na"
+                
+                if(splitconnections['connection1class'] not in self.connectiongenes):
+                    self.nodefromto[splitconnections['nodeinno']] = {self.connectiongenes[gene].innode:1}
+                    self.connectiongenes.append(splitconnections['connection1class'])
+                    self.enabledgenes.append(splitconnections['connection1class'])
+                    
+                if(splitconnections['connection2class'] not in self.connectiongenes):
+                    self.nodefromto[self.connectiongenes[gene].outnode][splitconnections['nodeinno']] = prevweight  
+                    self.connectiongenes.append(splitconnections['connection2class'])
+                    self.enabledgenes.append(splitconnections['connection2class'])
+                
+                xpos = str((float(self.alikes[self.connectiongenes[gene].innode].location)+float(self.alikes[self.connectiongenes[gene].outnode].location))/2)
+                self.nodegenes.append(nodegenes('main',splitconnections['nodeinno'],values.activationfunctionmain,xpos))
+                self.alikes[splitconnections['nodeinno']] = self.nodegenes[-1]
+                
+                if(xpos in self.layers):
+                    self.layers[xpos].append(splitconnections['nodeinno'])
+                else:
+                    self.layers[xpos] = []
+                    self.layers[xpos].append(splitconnections['nodeinno'])
+                    self.sort()
+                
+                
+                return None
+        
         xpos = str((float(self.alikes[self.connectiongenes[gene].innode].location)+float(self.alikes[self.connectiongenes[gene].outnode].location))/2)
         self.nodegenes.append(nodegenes('main',nodegenesinno,values.activationfunctionmain,xpos))
         self.nodefromto[nodegenesinno] = {self.connectiongenes[gene].innode:1}
-        self.nodefromto[self.connectiongenes[gene].outnode][nodegenesinno] = self.connectiongenes[gene].weight
-        self.connectiongenes.append(connectiongenes(self.connectiongenes[gene].innode,nodegenesinno,1,True,connectiongenesinno))
-        self.connectiongenes.append(connectiongenes(nodegenesinno,self.connectiongenes[gene].outnode,self.connectiongenes[gene].weight,True,connectiongenesinno+1))
+        self.nodefromto[self.connectiongenes[gene].outnode][nodegenesinno] = prevweight
         self.alikes[nodegenesinno] = self.nodegenes[-1]
         if(xpos in self.layers):
            self.layers[xpos].append(nodegenesinno)
@@ -196,7 +218,14 @@ class network():
             self.layers[xpos] = []
             self.layers[xpos].append(nodegenesinno)
             self.sort()
-        return {'from':self.connectiongenes[gene].outnode,'to':self.connectiongenes[gene].innode,'nodeinno':nodegenesinno,'connectioninno':connectiongenesinno}
+        
+    
+        self.connectiongenes.append(connectiongenes(self.connectiongenes[gene].innode,nodegenesinno,connectiongenesinno))
+        self.connectiongenes.append(connectiongenes(nodegenesinno,self.connectiongenes[gene].outnode,connectiongenesinno+1))
+        self.enabledgenes.append(self.connectiongenes[-1])
+        self.enabledgenes.append(self.connectiongenes[-2])
+        
+        return {'to':self.connectiongenes[gene].outnode,'from':self.connectiongenes[gene].innode,'nodeinno':nodegenesinno,'connectioninno':connectiongenesinno,'connection1class':self.connectiongenes[-2],'connection2class':self.connectiongenes[-1]}
     
     def sort(self):
         lst = self.layers
@@ -222,14 +251,14 @@ class network():
 
     def mutitate(self):
         if(random()<values.weight_prebutered_chance):
-            #print("changing weights")
-            for i in self.connectiongenes:
+            for i in self.enabledgenes:
                 if(random()<= values.weight_random_chance):
-                    i.weight = uniform(values.weightminmax[0],values.weightminmax[1])
-                    self.nodefromto[i.outnode][i.innode] = i.weight
+                    newweight = uniform(values.weightminmax[0],values.weightminmax[1])
+                    self.nodefromto[i.outnode][i.innode] = newweight
                 else:
-                    i.weight = uniform(i.weight-values.weight_prebuted_added,i.weight+values.weight_prebuted_added)
-                    self.nodefromto[i.outnode][i.innode] = i.weight
+                    oldweight = self.nodefromto[i.outnode][i.innode]
+                    newweight = uniform(oldweight-values.weight_prebuted_added,oldweight+values.weight_prebuted_added)
+                    self.nodefromto[i.outnode][i.innode] = newweight
         
         if(values.added_connection_chace >= random()):  
             #print("addedconnection")   
@@ -238,6 +267,8 @@ class network():
         if(values.mutitate_connection_chace >= random()):   
             #print('mutitatedconnectons')  
             values.mutitateaconnection(self)
+        
+        
     
     def draw(self,name):
         self.sort()

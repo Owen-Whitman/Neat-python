@@ -15,6 +15,7 @@ class species():
         
     def evaluate(self):
         best = 0
+
         self.speciesavg = 0 
         for i in self.members:
             #print(i)
@@ -22,6 +23,7 @@ class species():
             fitness =  i.fullfitness/len(self.members)
             if(best == 0 or fitness > best.fitness ):
                 best = i
+            
             i.fitness = fitness
             self.members_fitness[i] = fitness
             added = False
@@ -60,13 +62,7 @@ class species():
                 sortedfitness.extend(self.sortedfitness[sorts[i]][:int(len(self.sortedfitness[sorts[i]])-a)])
                 keptnet.extend([sorts[i] for b in range(len(self.sortedfitness[sorts[i]][:int(len(self.sortedfitness[sorts[i]])-a)]))])
                 a = 0
-        #print(len(sortedfitness),len(keptnet))
-        #sortedfitness = sorted(self.sortedfitness,reverse = True)[:ceil(len(self.sortedfitness)*values.top_reproduce)]
-        
 
-
-
-        #print(self.members_fitness)
         newmembers = {}
         for i in range(len(keptnet)):
             newmembers[keptnet[i]] = sortedfitness[i]
@@ -74,11 +70,11 @@ class species():
 
         self.members_fitness = newmembers 
         #self.members = keptnet
-        if(numofnewpopulation> 1):
+        if(numofnewpopulation> 1 and len(self.members)>= 5):
             a= sortedfitness[0].copy()
             ret_nets.append(a)
             numofnewpopulation -= 1
-
+        #TODO if needed work around this part to make shit faster
         self.rep = choice(sortedfitness).copy()
 
 
@@ -90,7 +86,7 @@ class species():
             
         ret_nets.extend(choices(sortedfitness,keptnet,k=floor(numofnewpopulation*0.25)))
         numofnewpopulation -= floor(numofnewpopulation*0.25)
-        print("creating babies")
+
         while(numofnewpopulation>0):
 
             choic = choices(sortedfitness,keptnet,k=2)
