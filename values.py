@@ -1,6 +1,6 @@
 from random import random
 from node_connection_genes import connectiongenes
-numofinputs = 3
+numofinputs = 5
 numofoutputs = 1
 
 activationfunctioninput = 'sigmoid'
@@ -13,8 +13,8 @@ c2 = 1
 c3 = 0.4
 species_target = 10
 inherit_desabled = 0.75
-added_connection_chace = 0.02
-mutitate_connection_chace = 0.015
+added_connection_chace = 0.005
+mutitate_connection_chace = 0.003
 weight_prebutered_chance = 0.8
 weight_prebuted_added = 0.2
 weight_random_chance = 0.1
@@ -23,9 +23,9 @@ top_reproduce = 0.5
 populationsize = 150
 closeness = 3
 
-totalnodegenes = 4
-totalconnectiongenes = 3
-allconnectiongenes = [{'from':0,'to':3,'inno':0,'class':connectiongenes(0,3,0)},{'from':1,'to':3,'inno':1,'class':connectiongenes(1,3,1)},{'from':2,'to':3,'inno':2,'class':connectiongenes(2,3,2)}]
+totalnodegenes = 6
+totalconnectiongenes = 6
+allconnectiongenes = [{'from':0,'to':5,'inno':0,'class':connectiongenes(0,5,0)},{'from':1,'to':5,'inno':1,'class':connectiongenes(1,5,1)},{'from':2,'to':5,'inno':2,'class':connectiongenes(2,5,2)},{'from':3,'to':5,'inno':3,'class':connectiongenes(3,5,3)},{'from':4,'to':5,'inno':4,'class':connectiongenes(4,5,4)}]
 allsplitnodes = []
 
 def addaconnection(net):
@@ -43,11 +43,8 @@ def addaconnection(net):
         
 def mutitateaconnection(net):
     global totalconnectiongenes, totalnodegenes, allsplitnodes
-    ret = net.mutitateconnection(totalnodegenes,totalconnectiongenes,allsplitnodes)
-    for i in range(len(net.enabledgenes)):
-        if(net.enabledgenes[i] in net.enabledgenes[0:i] or net.enabledgenes[i] in net.enabledgenes[i+1:0]):
-            print(i)
-            raise ValueError
+    ret = net.mutitateconnection(totalnodegenes,totalconnectiongenes,allsplitnodes,allconnectiongenes)
+    print(ret,"ret")
     if(ret == "Na"):
         addaconnection(net)
     elif(ret != None ):

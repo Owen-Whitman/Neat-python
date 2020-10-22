@@ -2,14 +2,13 @@ from network import network
 from species import species
 import values
 import pickle
-from examples.xor import run 
+from draw import drawit as draw
 from copy import deepcopy
 allnetworks = []
 allspecies = []
-    
-            
- 
-    
+
+
+
 def closeness(net1, net2):
     net1_geneinno = [i.innovation_number for i in net1.connectiongenes]
     net2_geneinno = [i.innovation_number for i in net2.connectiongenes]
@@ -70,18 +69,22 @@ def closeness(net1, net2):
     else:
         n = max(len(net1.connectiongenes),len(net2.connectiongenes))
     return ((values.c1*excess)/n)+((values.c2*disjoint)/n)+(values.c3*(alike_weightdifference/alike))
-
-
     
 def createtestnet():
     net = network()
     values.addaconnection(net)
+
     values.mutitateaconnection(net)
+
     values.addaconnection(net)
+
     #net.mutitate()
     values.addaconnection(net)
+
     values.mutitateaconnection(net)
+
     values.addaconnection(net)
+
     return net
 
 def save(gen,best):
@@ -96,7 +99,68 @@ def save(gen,best):
         pickle.dump(cont,pickle_file)
 
 
+for b in range(10):
+    a = network()
+    values.addaconnection(a)
+    print("added1")
+    for i in a.enabledgenes:
+        test = a.nodefromto[i.outnode][i.innode]
+    values.addaconnection(a)
+    print("added2")
+    for i in a.enabledgenes:
+        test = a.nodefromto[i.outnode][i.innode]
+    values.mutitateaconnection(a)
+    print("mutitated1")
+    for i in a.enabledgenes:
+        test = a.nodefromto[i.outnode][i.innode]
+    values.addaconnection(a)
+    print("added3")
+    for i in a.enabledgenes:
+        test = a.nodefromto[i.outnode][i.innode]
+    values.mutitateaconnection(a)
+    print("mutitated2")
+    for i in a.enabledgenes:
+        test = a.nodefromto[i.outnode][i.innode]
+    values.addaconnection(a)
+    print("added4")
+    for i in a.enabledgenes:
+        test = a.nodefromto[i.outnode][i.innode]
+    values.mutitateaconnection(a)
+    print("mutitated3")
+    for i in a.enabledgenes:
+        test = a.nodefromto[i.outnode][i.innode]
+        
+    values.addaconnection(a)
+    print("added1")
+    for i in a.enabledgenes:
+        test = a.nodefromto[i.outnode][i.innode]
+    values.addaconnection(a)
+    print("added2")
+    for i in a.enabledgenes:
+        test = a.nodefromto[i.outnode][i.innode]
+    values.mutitateaconnection(a)
+    print("mutitated1")
+    for i in a.enabledgenes:
+        test = a.nodefromto[i.outnode][i.innode]
+    values.addaconnection(a)
+    print("added3")
+    for i in a.enabledgenes:
+        test = a.nodefromto[i.outnode][i.innode]
+    values.mutitateaconnection(a)
+    print("mutitated2")
+    for i in a.enabledgenes:
+        test = a.nodefromto[i.outnode][i.innode]
+    values.addaconnection(a)
+    print("added4")
+    for i in a.enabledgenes:
+        test = a.nodefromto[i.outnode][i.innode]
+    values.mutitateaconnection(a)
+    print("mutitated3")
+    for i in a.enabledgenes:
+        test = a.nodefromto[i.outnode][i.innode]
+    #draw(a.nodefromto,a.layers)
 
+'''
 for i in range(values.populationsize):
     allnetworks.append(network())
 sizeofpop = values.populationsize
@@ -139,12 +203,18 @@ for mainstuff in range(0,100):
 
     for i in allspecies:
         a = i.evaluate()
+    
+        if(a[1].fullfitness == 'done'):
+            best = a[1]
+            break
         avg += a[0]
         if(best == 0 or a[1].fitness > best.fitness):
             best = a[1]
         
         if(bestunweighted == 0 or a[1].fullfitness > bestunweighted.fullfitness):
             bestunweighted = a[1]
+    if(best.fullfitness == 'done'):
+        break
     if(globalbest == 0 or bestunweighted.fullfitness > globalbest.fullfitness):
         globalbest = bestunweighted.copy()
     print("evaluated")
@@ -153,8 +223,7 @@ for mainstuff in range(0,100):
     
     print("gen"+str(mainstuff))
     print("best fitness weightd", best.fitness)
-    '''if(mainstuff%10 == 0 and mainstuff != 1):
-        bestunweighted.draw("gen " + str(mainstuff))'''
+
     print("best fitness unweighted", bestunweighted.fullfitness)
     
     for i in allspecies:
@@ -169,5 +238,7 @@ for mainstuff in range(0,100):
 print("  ")
 print("done")
 print(run(globalbest))
+print(globalbest.draw("hi"))
 print(globalbest.fullfitness)
 #print(globalbest.draw("finalscore"))
+'''

@@ -15,6 +15,7 @@ class network():
         self.fullfitness = 0
         self.enabledgenes = []
         self.disabledgenes = {}
+        self.mutitations = []
         if(kwargs != {}):
             self.createbabynet(kwargs['parent1'],kwargs['parent2'])
         else:
@@ -30,7 +31,7 @@ class network():
                 self.layers['1.0'].append(i)
             for b in range(0,values.numofinputs,1):
                 weight = uniform(values.weightminmax[0],values.weightminmax[1])
-                self.nodefromto[3][b] = weight
+                self.nodefromto[5][b] = weight
                 self.connectiongenes.append(values.allconnectiongenes[b]['class'])
                 self.enabledgenes.append(values.allconnectiongenes[b]['class'])
 
@@ -53,6 +54,8 @@ class network():
                 self.layers[i.location] = [i.innovation_number]
         
         for fitgene in fitparent.connectiongenes:
+            
+            
             cont = False
             self.connectiongenes.append(fitgene)
             if(fitgene in unfitparent.connectiongenes):
@@ -89,7 +92,7 @@ class network():
                     self.nodefromto[fitgene.outnode][fitgene.innode] = fitparent.disabledgenes[fitgene]
                 else:
                     self.disabledgenes[fitgene] = fitparent.disabledgenes[fitgene] 
-                        
+        self.mutitations.append("baby was created")            
         self.sort()
                    
     def addconnection(self, innovationnumber,globalconnectiongenes):
@@ -131,7 +134,11 @@ class network():
         
         for genes in globalconnectiongenes:
             if(genes['from'] == from_node and genes['to'] == to_node):
+                print("Heree")
+                location = globalconnectiongenes.index(genes)
                 innovationnumber = genes['inno']
+                if(innovationnumber == -1):
+                    innovationnumber = 0
                 changedinnovationnumber = 1
                 break
 
@@ -143,34 +150,47 @@ class network():
             self.enabledgenes.append(clas)
             weight = uniform(values.weightminmax[0],values.weightminmax[1])
             self.nodefromto[to_node][from_node] = weight
+            self.mutitations.append("created two new connections")
             return {'from':from_node,'to':to_node,'inno':innovationnumber,'class':clas}
         else:
-            clas = values.allconnectiongenes[innovationnumber]['class']
+            print(globalconnectiongenes[location],innovationnumber)
+            clas = globalconnectiongenes[location]['class']
+            print(clas,clas.innode,clas.outnode,from_node,to_node)
             if(clas in self.connectiongenes):
+                print("in")
                 if(clas not in self.enabledgenes):
+                    print("indisabled")
                     self.enabledgenes.append(clas)
                     self.nodefromto[to_node][from_node] = self.disabledgenes[clas]
                     self.disabledgenes.pop(clas)
+                    self.mutitations.append("moved a disabled connectiongene")
                     return None
                 else:
+                    print("inenabled")
                     return None
             else:
+                print("out")
                 weight = uniform(values.weightminmax[0],values.weightminmax[1])
                 self.nodefromto[to_node][from_node] = weight
                 self.connectiongenes.append(clas)
                 self.enabledgenes.append(clas)
+                self.mutitations.append("added a previous connection")
                 return None
           
-    def mutitateconnection(self,nodegenesinno,connectiongenesinno,globalsplitconnections):
+    def mutitateconnection(self,nodegenesinno,connectiongenesinno,globalsplitconnections,allconnectiongenes):
         if(len(self.connectiongenes)== 0):
             return None
         gene = randint(0,len(self.connectiongenes)-1)
-        
+        #error comes from 
+        print(self.nodefromto)
         if(self.connectiongenes[gene] in self.enabledgenes):
             self.disabledgenes[self.connectiongenes[gene]] = self.nodefromto[self.connectiongenes[gene].outnode][self.connectiongenes[gene].innode]
             prevweight = self.nodefromto[self.connectiongenes[gene].outnode][self.connectiongenes[gene].innode]
-            del self.nodefromto[self.connectiongenes[gene].outnode][self.connectiongenes[gene].innode]
+
+            del self.nodefromto[self.connectiongenes[gene].outnode][self.connectiongenes[gene].innode] #TODO fix this so it dosent delete whole node in node connection gene if connection is arleady tehere
+
             self.enabledgenes.remove(self.connectiongenes[gene]) 
+            
         else:
             prevweight = self.disabledgenes[self.connectiongenes[gene]]
 
@@ -179,53 +199,91 @@ class network():
         
         for splitconnections in globalsplitconnections:
             if(self.connectiongenes[gene].innode == splitconnections['from'] and self.connectiongenes[gene].outnode == splitconnections['to']):
-                print("here")
                 if((splitconnections['connection1class'] in self.connectiongenes and splitconnections['connection2class'] in self.connectiongenes)):
                     return "Na"
                 
+                print("heere")
+                #TODO add a check to see if its in connection genes
+                print(splitconnections['from'],splitconnections['to'],splitconnections['nodeinno'])
+
                 if(splitconnections['connection1class'] not in self.connectiongenes):
-                    self.nodefromto[splitconnections['nodeinno']] = {self.connectiongenes[gene].innode:1}
+                    print("splitconnectiononeisntin")
+                    if(splitconnections['nodeinno'] in self.nodefromto):
+                        self.nodefromto[splitconnections['nodeinno']][self.connectiongenes[gene].innode] = 1
+                    else:
+                        self.nodefromto[splitconnections['nodeinno']] = {self.connectiongenes[gene].innode:1}
                     self.connectiongenes.append(splitconnections['connection1class'])
                     self.enabledgenes.append(splitconnections['connection1class'])
-                    
+                else:
+                    if(splitconnections['connection1class'] in self.disabledgenes):
+                        print("1indisabled")
+                        if(splitconnections['nodeinno'] in self.nodefromto):
+                            self.nodefromto[splitconnections['nodeinno']][self.connectiongenes[gene].innode] = 1
+                        else:
+                            self.nodefromto[splitconnections['nodeinno']] = {self.connectiongenes[gene].innode:1}
+                        self.enabledgenes.append(splitconnections['connection1class'])
+                        self.disabledgenes.remove(splitconnections['connection1class'])
+                
                 if(splitconnections['connection2class'] not in self.connectiongenes):
-                    self.nodefromto[self.connectiongenes[gene].outnode][splitconnections['nodeinno']] = prevweight  
+                    print("splitconnectiontwoisntin")
+                    if(self.connectiongenes[gene].outnode in self.nodefromto):
+                        self.nodefromto[self.connectiongenes[gene].outnode][splitconnections['nodeinno']] = prevweight  
+                    else:
+                        self.nodefromto[self.connectiongenes[gene].outnode]= {splitconnections['nodeinno']:prevweight}
                     self.connectiongenes.append(splitconnections['connection2class'])
                     self.enabledgenes.append(splitconnections['connection2class'])
+                else:
+                    if(splitconnections['connection2class']  in self.disabledgenes):
+                        print("2indisabled")
+                        if(self.connectiongenes[gene].outnode in self.nodefromto):
+                            self.nodefromto[self.connectiongenes[gene].outnode][splitconnections['nodeinno']] = prevweight  
+                        else:
+                            self.nodefromto[self.connectiongenes[gene].outnode]= {splitconnections['nodeinno']:prevweight}
+                        self.enabledgenes.append(splitconnections['connection2class'])
+                        self.disabledgenes.remove(splitconnections['connection2class'])
                 
                 xpos = str((float(self.alikes[self.connectiongenes[gene].innode].location)+float(self.alikes[self.connectiongenes[gene].outnode].location))/2)
                 self.nodegenes.append(nodegenes('main',splitconnections['nodeinno'],values.activationfunctionmain,xpos))
                 self.alikes[splitconnections['nodeinno']] = self.nodegenes[-1]
                 
                 if(xpos in self.layers):
-                    self.layers[xpos].append(splitconnections['nodeinno'])
+                    if(splitconnections['nodeinno'] in self.layers[xpos]):
+                        pass
+                    else:
+                        self.layers[xpos].append(splitconnections['nodeinno'])
                 else:
                     self.layers[xpos] = []
                     self.layers[xpos].append(splitconnections['nodeinno'])
                     self.sort()
                 
-                
+                self.mutitations.append("added a previous split connection")
+                for i in self.enabledgenes:
+                    test = self.nodefromto[i.outnode][i.innode]
                 return None
-        
+
+
         xpos = str((float(self.alikes[self.connectiongenes[gene].innode].location)+float(self.alikes[self.connectiongenes[gene].outnode].location))/2)
         self.nodegenes.append(nodegenes('main',nodegenesinno,values.activationfunctionmain,xpos))
+        
         self.nodefromto[nodegenesinno] = {self.connectiongenes[gene].innode:1}
         self.nodefromto[self.connectiongenes[gene].outnode][nodegenesinno] = prevweight
         self.alikes[nodegenesinno] = self.nodegenes[-1]
+        
         if(xpos in self.layers):
-           self.layers[xpos].append(nodegenesinno)
+                self.layers[xpos].append(nodegenesinno)
         else:
             self.layers[xpos] = []
             self.layers[xpos].append(nodegenesinno)
             self.sort()
         
-    
-        self.connectiongenes.append(connectiongenes(self.connectiongenes[gene].innode,nodegenesinno,connectiongenesinno))
-        self.connectiongenes.append(connectiongenes(nodegenesinno,self.connectiongenes[gene].outnode,connectiongenesinno+1))
-        self.enabledgenes.append(self.connectiongenes[-1])
-        self.enabledgenes.append(self.connectiongenes[-2])
-        
-        return {'to':self.connectiongenes[gene].outnode,'from':self.connectiongenes[gene].innode,'nodeinno':nodegenesinno,'connectioninno':connectiongenesinno,'connection1class':self.connectiongenes[-2],'connection2class':self.connectiongenes[-1]}
+        newgene1 = connectiongenes(self.connectiongenes[gene].innode,nodegenesinno,connectiongenesinno)
+        newgene2 = connectiongenes(nodegenesinno,self.connectiongenes[gene].outnode,connectiongenesinno+1)
+        self.connectiongenes.append(newgene1)
+        self.connectiongenes.append(newgene2)
+        self.enabledgenes.append(newgene1)
+        self.enabledgenes.append(newgene2)
+        self.mutitations.append("added a new split connection")
+        return {'to':self.connectiongenes[gene].outnode,'from':self.connectiongenes[gene].innode,'nodeinno':nodegenesinno,'connectioninno':connectiongenesinno,'connection1class':newgene1,'connection2class':newgene2}
     
     def sort(self):
         lst = self.layers
@@ -243,7 +301,7 @@ class network():
             if(i == '0.0'):
                 continue
             for b in self.layers[i]:
-                total = 0                
+                total = 0
                 for c in self.nodefromto[b]:
                     total += self.alikes[c].value * self.nodefromto[b][c]
                 self.alikes[b].value = self.alikes[b].activation(total)        

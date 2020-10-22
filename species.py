@@ -1,4 +1,4 @@
-from examples.xor import run 
+
 import values
 from random import random, choice, choices
 import network
@@ -20,6 +20,8 @@ class species():
         for i in self.members:
             #print(i)
             i.fullfitness = run(i)
+            if(i.fullfitness == 'done'):
+                return [None,i]
             fitness =  i.fullfitness/len(self.members)
             if(best == 0 or fitness > best.fitness ):
                 best = i
@@ -72,6 +74,12 @@ class species():
         #self.members = keptnet
         if(numofnewpopulation> 1 and len(self.members)>= 5):
             a= sortedfitness[0].copy()
+            a.connectiongenes = [i for i in sortedfitness[0].connectiongenes]
+            a.enabledgenes = [i for i in sortedfitness[0].enabledgenes]
+            
+            a.disabledgenes = {}
+            for i in sortedfitness[0].disabledgenes:
+                a.disabledgenes[i] = sortedfitness[0].disabledgenes[i]
             ret_nets.append(a)
             numofnewpopulation -= 1
         #TODO if needed work around this part to make shit faster
