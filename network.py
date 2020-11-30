@@ -1,6 +1,6 @@
 from node_connection_genes import connectiongenes, nodegenes
 from random import randint, random,uniform
-from viznet import connecta2a, node_sequence, NodeBrush, EdgeBrush, DynamicShow
+
 import values
 from copy import deepcopy
 class network():
@@ -31,7 +31,7 @@ class network():
                 self.layers['1.0'].append(i)
             for b in range(0,values.numofinputs,1):
                 weight = uniform(values.weightminmax[0],values.weightminmax[1])
-                self.nodefromto[5][b] = weight
+                self.nodefromto[values.numofinputs][b] = weight
                 self.connectiongenes.append(values.allconnectiongenes[b]['class'])
                 self.enabledgenes.append(values.allconnectiongenes[b]['class'])
 
@@ -94,7 +94,7 @@ class network():
                     self.disabledgenes[fitgene] = fitparent.disabledgenes[fitgene] 
         self.mutitations.append("baby was created")            
         self.sort()
-                   
+                 
     def addconnection(self, innovationnumber,globalconnectiongenes):
         from_node = randint(0,len(self.nodegenes)-1)
         to_node = randint(0,len(self.nodegenes)-1)
@@ -134,7 +134,6 @@ class network():
         
         for genes in globalconnectiongenes:
             if(genes['from'] == from_node and genes['to'] == to_node):
-                print("Heree")
                 location = globalconnectiongenes.index(genes)
                 innovationnumber = genes['inno']
                 if(innovationnumber == -1):
@@ -153,23 +152,17 @@ class network():
             self.mutitations.append("created two new connections")
             return {'from':from_node,'to':to_node,'inno':innovationnumber,'class':clas}
         else:
-            print(globalconnectiongenes[location],innovationnumber)
             clas = globalconnectiongenes[location]['class']
-            print(clas,clas.innode,clas.outnode,from_node,to_node)
             if(clas in self.connectiongenes):
-                print("in")
                 if(clas not in self.enabledgenes):
-                    print("indisabled")
                     self.enabledgenes.append(clas)
                     self.nodefromto[to_node][from_node] = self.disabledgenes[clas]
                     self.disabledgenes.pop(clas)
                     self.mutitations.append("moved a disabled connectiongene")
                     return None
                 else:
-                    print("inenabled")
                     return None
             else:
-                print("out")
                 weight = uniform(values.weightminmax[0],values.weightminmax[1])
                 self.nodefromto[to_node][from_node] = weight
                 self.connectiongenes.append(clas)
@@ -182,12 +175,12 @@ class network():
             return None
         gene = randint(0,len(self.connectiongenes)-1)
         #error comes from 
-        print(self.nodefromto)
+        #print(self.nodefromto)
         if(self.connectiongenes[gene] in self.enabledgenes):
             self.disabledgenes[self.connectiongenes[gene]] = self.nodefromto[self.connectiongenes[gene].outnode][self.connectiongenes[gene].innode]
             prevweight = self.nodefromto[self.connectiongenes[gene].outnode][self.connectiongenes[gene].innode]
 
-            del self.nodefromto[self.connectiongenes[gene].outnode][self.connectiongenes[gene].innode] #TODO fix this so it dosent delete whole node in node connection gene if connection is arleady tehere
+            del self.nodefromto[self.connectiongenes[gene].outnode][self.connectiongenes[gene].innode]
 
             self.enabledgenes.remove(self.connectiongenes[gene]) 
             
@@ -201,13 +194,9 @@ class network():
             if(self.connectiongenes[gene].innode == splitconnections['from'] and self.connectiongenes[gene].outnode == splitconnections['to']):
                 if((splitconnections['connection1class'] in self.connectiongenes and splitconnections['connection2class'] in self.connectiongenes)):
                     return "Na"
-                
-                print("heere")
-                #TODO add a check to see if its in connection genes
-                print(splitconnections['from'],splitconnections['to'],splitconnections['nodeinno'])
 
                 if(splitconnections['connection1class'] not in self.connectiongenes):
-                    print("splitconnectiononeisntin")
+
                     if(splitconnections['nodeinno'] in self.nodefromto):
                         self.nodefromto[splitconnections['nodeinno']][self.connectiongenes[gene].innode] = 1
                     else:
@@ -216,7 +205,7 @@ class network():
                     self.enabledgenes.append(splitconnections['connection1class'])
                 else:
                     if(splitconnections['connection1class'] in self.disabledgenes):
-                        print("1indisabled")
+
                         if(splitconnections['nodeinno'] in self.nodefromto):
                             self.nodefromto[splitconnections['nodeinno']][self.connectiongenes[gene].innode] = 1
                         else:
@@ -225,7 +214,7 @@ class network():
                         self.disabledgenes.remove(splitconnections['connection1class'])
                 
                 if(splitconnections['connection2class'] not in self.connectiongenes):
-                    print("splitconnectiontwoisntin")
+
                     if(self.connectiongenes[gene].outnode in self.nodefromto):
                         self.nodefromto[self.connectiongenes[gene].outnode][splitconnections['nodeinno']] = prevweight  
                     else:
@@ -234,7 +223,6 @@ class network():
                     self.enabledgenes.append(splitconnections['connection2class'])
                 else:
                     if(splitconnections['connection2class']  in self.disabledgenes):
-                        print("2indisabled")
                         if(self.connectiongenes[gene].outnode in self.nodefromto):
                             self.nodefromto[self.connectiongenes[gene].outnode][splitconnections['nodeinno']] = prevweight  
                         else:
@@ -326,45 +314,6 @@ class network():
             #print('mutitatedconnectons')  
             values.mutitateaconnection(self)
         
-        
-    
-    def draw(self,name):
-        self.sort()
-        with DynamicShow(filename="saved_bests\\" + name+".png") as d:
-            nodes = []
-            numoflayers = 0
-            for i in self.layers:
-                nodes.append([])
-                x = 0
-                if(i != '0.0' and i != '1.0'):
-                    x = 1
-                if(numoflayers == 0):
-                    brush = NodeBrush('nn.input', size='normal')
-                elif(numoflayers == len(self.layers)-1):
-                    brush = NodeBrush('nn.output', size='normal')
-                else:
-                    brush = NodeBrush('nn.hidden', size='normal')
-                for b in self.layers[i]:
-                    c = brush >> (numoflayers,x)
-                    if(brush.style == 'nn.output' and x == 0):
-                        c.text("score:"+str(self.fullfitness),'bottom')
-                    c.text(str(b),'center')
-                    nodes[numoflayers].append(c)
-                    x += 1
-                numoflayers += 1
-            edge = EdgeBrush('->-', lw=2)
-            for a in range(len(nodes)):
-                selflayersa = self.layers[sorted(self.layers)[a]]
-                if(a == 0 ):
-                    continue
-                for b in range(len(nodes[a])):
-                    for i in self.nodefromto[selflayersa[b]]:
-                        for one in range(len(nodes)):
-                            for two in range(len(nodes[one])):
-                                if(i == self.layers[sorted(self.layers)[one]][two]):
-                                   e = edge >> (nodes[one][two],nodes[a][b])
-                                   e.text(str(round(self.nodefromto[selflayersa[b]][i],4)),'top')
-                                   break
                                
     def copy(self):
         return deepcopy(self)

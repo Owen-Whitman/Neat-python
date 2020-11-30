@@ -13,3 +13,4 @@ def run(net):
         score = 0
 
     return score
+

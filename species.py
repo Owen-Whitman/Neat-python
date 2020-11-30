@@ -2,6 +2,7 @@
 import values
 from random import random, choice, choices
 import network
+from examples.xor import run
 from math import floor, ceil
 class species():
 
@@ -18,10 +19,7 @@ class species():
 
         self.speciesavg = 0 
         for i in self.members:
-            #print(i)
-            i.fullfitness = run(i)
-            if(i.fullfitness == 'done'):
-                return [None,i]
+            i.fullfitness = run(i)   
             fitness =  i.fullfitness/len(self.members)
             if(best == 0 or fitness > best.fitness ):
                 best = i
@@ -36,6 +34,7 @@ class species():
                 
             self.speciesavg += fitness
         #print(len(self.members_fitness))
+        self.speciesavg = self.speciesavg/len(self.members)
         self.prevbestfitness.append(best.fitness)
         return [self.speciesavg, best]
     
@@ -72,7 +71,7 @@ class species():
 
         self.members_fitness = newmembers 
         #self.members = keptnet
-        if(numofnewpopulation> 1 and len(self.members)>= 5):
+        if(numofnewpopulation> 1):
             a= sortedfitness[0].copy()
             a.connectiongenes = [i for i in sortedfitness[0].connectiongenes]
             a.enabledgenes = [i for i in sortedfitness[0].enabledgenes]
@@ -82,7 +81,8 @@ class species():
                 a.disabledgenes[i] = sortedfitness[0].disabledgenes[i]
             ret_nets.append(a)
             numofnewpopulation -= 1
-        #TODO if needed work around this part to make shit faster
+
+
         self.rep = choice(sortedfitness).copy()
 
 

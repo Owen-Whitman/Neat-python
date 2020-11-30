@@ -1,13 +1,86 @@
+from matplotlib.pyplot import ylabel
 from network import network
 from species import species
+from keyboard import is_pressed
 import values
-import pickle
-from draw import drawit as draw
-from copy import deepcopy
+from time import time
+import matplotlib.pyplot as plt
+from os import getcwd, path
+
+t0 = time()
+
+
+
 allnetworks = []
 allspecies = []
+generation = 1
 
+x = []
+best_scores = []
+best_unweighted_scores = []
+best_number_nodes = []
+best_number_connections = []
+averages = []
+population_size = []
+time_per_generation = []
+numspecies_per_generation = []
+besteverscore = 0
+ylabels = ["best network's weighted fitness", "best network's unweighted fitness",
+           "number of nodes for the best network", "number of connections for the best network", 
+           "average fitness", "population size", "number of species", "time per generation"]
+root=getcwd()
+file_path = path.join(root,"saved","saved_data.txt")
+write_file = open(file_path,'w')
+fig, axs = plt.subplots(2,4, sharex = True)
+axsummer = 0
+for ax in axs.flat:
+    ax.set(ylabel = ylabels[axsummer])
+    axsummer += 1 
 
+values.setup()
+
+def savedata(avg,best,bestunweighted, totaltime, numspecies):
+    global besteverscore
+    # best.score bestunweighted.score, len(bestunweighted.nodegenes), len(bestunweighted.connectiongenes), avg, values.populationsize, numspecies, time
+    x.append(generation)
+    best_scores.append(best.fitness)
+    best_unweighted_scores.append(bestunweighted.fullfitness)
+    best_number_nodes.append(len(bestunweighted.nodegenes))
+    best_number_connections.append(len(bestunweighted.nodegenes))
+    averages.append(avg)
+    population_size.append(len(allnetworks))
+    numspecies_per_generation.append(numspecies)
+    time_per_generation.append(totaltime)
+    axs[0,0].plot(x,best_scores)
+    axs[0,1].plot(x,best_unweighted_scores)
+    axs[0,2].plot(x,best_number_nodes)
+    axs[0,3].plot(x,best_number_connections)
+    axs[1,0].plot(x,averages)
+    axs[1,1].plot(x,population_size)
+    axs[1,2].plot(x,numspecies_per_generation)
+    axs[1,3].plot(x,time_per_generation)
+    plt.pause(0.05)
+    write_file.write("generation"+ str(generation) +":\n")
+    write_file.write("best score weighted: "+ str(best_scores[-1])+ "\n")
+    write_file.write("best score unweighted: "+ str(best_unweighted_scores[-1])+ "\n")
+    write_file.write("best number nodes: "+ str(best_number_nodes[-1])+ "\n")
+    write_file.write("best number connections: "+ str(best_number_connections[-1])+ "\n")
+    write_file.write("average score for this generation: "+ str(averages[-1])+ "\n")
+    write_file.write("population size: "+ str(population_size[-1])+ "\n")
+    write_file.write("number of species: "+ str(numspecies_per_generation[-1])+ "\n")
+    write_file.write("time for this generation: "+ str(time_per_generation[-1])+ "\n")
+    if(besteverscore == 0 or bestunweighted.fullfitness  > besteverscore):
+        besteverscore = bestunweighted.fullfitness
+    write_file.write("best score so far: " + str(besteverscore) + "\n")
+    write_file.write("best score weighted avg: "+ str(sum(best_scores)/len(best_scores))+ "\n")
+    write_file.write("best score unweighted avg: " + str(sum(best_scores)/len(best_scores))+ "\n")
+    write_file.write("average score for all generations: "+ str(sum(averages)/len(averages))+ "\n")
+    write_file.write("average time took per generation: "+ str(sum(time_per_generation)/len(time_per_generation))+ "\n")
+    write_file.write("total time up to this point: "+ str(int(round(time()))-int(round(t0)))+ "\n")
+    write_file.write("best structure:")
+    write_file.write(str(bestunweighted.nodefromto))
+    write_file.write("\n")
+    write_file.write("\n")
 
 def closeness(net1, net2):
     net1_geneinno = [i.innovation_number for i in net1.connectiongenes]
@@ -87,88 +160,7 @@ def createtestnet():
 
     return net
 
-def save(gen,best):
-
-    class Container(object):
-        def __init__(self,allspecies,best,gen):
-            self.allspecies = allspecies
-            self.best = best
-            self.gen = gen
-    cont = Container(allspecies,best,gen)
-    with open("saved_bests/"+str(gen)+"xor"+".pk1",'wb') as pickle_file:
-        pickle.dump(cont,pickle_file)
-
-
-for b in range(10):
-    a = network()
-    values.addaconnection(a)
-    print("added1")
-    for i in a.enabledgenes:
-        test = a.nodefromto[i.outnode][i.innode]
-    values.addaconnection(a)
-    print("added2")
-    for i in a.enabledgenes:
-        test = a.nodefromto[i.outnode][i.innode]
-    values.mutitateaconnection(a)
-    print("mutitated1")
-    for i in a.enabledgenes:
-        test = a.nodefromto[i.outnode][i.innode]
-    values.addaconnection(a)
-    print("added3")
-    for i in a.enabledgenes:
-        test = a.nodefromto[i.outnode][i.innode]
-    values.mutitateaconnection(a)
-    print("mutitated2")
-    for i in a.enabledgenes:
-        test = a.nodefromto[i.outnode][i.innode]
-    values.addaconnection(a)
-    print("added4")
-    for i in a.enabledgenes:
-        test = a.nodefromto[i.outnode][i.innode]
-    values.mutitateaconnection(a)
-    print("mutitated3")
-    for i in a.enabledgenes:
-        test = a.nodefromto[i.outnode][i.innode]
-        
-    values.addaconnection(a)
-    print("added1")
-    for i in a.enabledgenes:
-        test = a.nodefromto[i.outnode][i.innode]
-    values.addaconnection(a)
-    print("added2")
-    for i in a.enabledgenes:
-        test = a.nodefromto[i.outnode][i.innode]
-    values.mutitateaconnection(a)
-    print("mutitated1")
-    for i in a.enabledgenes:
-        test = a.nodefromto[i.outnode][i.innode]
-    values.addaconnection(a)
-    print("added3")
-    for i in a.enabledgenes:
-        test = a.nodefromto[i.outnode][i.innode]
-    values.mutitateaconnection(a)
-    print("mutitated2")
-    for i in a.enabledgenes:
-        test = a.nodefromto[i.outnode][i.innode]
-    values.addaconnection(a)
-    print("added4")
-    for i in a.enabledgenes:
-        test = a.nodefromto[i.outnode][i.innode]
-    values.mutitateaconnection(a)
-    print("mutitated3")
-    for i in a.enabledgenes:
-        test = a.nodefromto[i.outnode][i.innode]
-    #draw(a.nodefromto,a.layers)
-
-'''
-for i in range(values.populationsize):
-    allnetworks.append(network())
-sizeofpop = values.populationsize
-generation = 1
-
-globalbest = 0 
-
-for mainstuff in range(0,100):
+def createspecies():
     for i in range(len(allnetworks)-1,-1,-1):
         found = False
         for b in allspecies:
@@ -179,18 +171,13 @@ for mainstuff in range(0,100):
         if(not found):
             allspecies.append(species(allnetworks[i]))
         allnetworks.pop(i)
-        
+            
     if(len(allspecies)<values.species_target):
         values.closeness -= 0.3
     elif(len(allspecies)>values.species_target):
         values.closeness += 0.3
     if(values.closeness<0.3):
         values.closeness = 0.3
-    print("added")
-    print("numofspecies", len(allspecies))
-    avg = 0 
-    best = 0
-    bestunweighted = 0
     for i in range(len(allspecies)-1,-1,-1):
         if(len(allspecies[i].members) <= 1): 
             allspecies.pop(i)
@@ -201,44 +188,54 @@ for mainstuff in range(0,100):
             allspecies.pop(i)
             continue
 
+def evaulate():
+    avg = 0 
+    best = 0
+    bestunweighted = 0
     for i in allspecies:
         a = i.evaluate()
-    
-        if(a[1].fullfitness == 'done'):
-            best = a[1]
-            break
+        
         avg += a[0]
         if(best == 0 or a[1].fitness > best.fitness):
             best = a[1]
-        
+            
         if(bestunweighted == 0 or a[1].fullfitness > bestunweighted.fullfitness):
             bestunweighted = a[1]
-    if(best.fullfitness == 'done'):
-        break
-    if(globalbest == 0 or bestunweighted.fullfitness > globalbest.fullfitness):
-        globalbest = bestunweighted.copy()
-    print("evaluated")
-    print("size of prev pop", sizeofpop)
-    print("numofspecies", len(allspecies))
+            
+    return (avg),best,bestunweighted, len(allspecies)
     
-    print("gen"+str(mainstuff))
-    print("best fitness weightd", best.fitness)
-
-    print("best fitness unweighted", bestunweighted.fullfitness)
-    
+def mutitate(avg):
     for i in allspecies:
-        allnetworks.extend(i.mutitate(avg))
+        mut = i.mutitate(avg)
+        #print(len(mut))
+        allnetworks.extend(mut)
 
-    sizeofpop = len(allnetworks)
+
+def setup():    
+    global allnetworks
+    for a in range(values.populationsize):
+        allnetworks.append(network())
+setup()
+while(True):
+    t = time()
+    createspecies()
+    if(len(allspecies) == 0):
+        if(len(allnetworks) == 0):
+            print("here")
+            setup()
+        else:
+            continue
+    avg, best, bestunweighted, numspecies = evaulate()
+    mutitate(avg)
+    t = time()-t
+    savedata(avg/numspecies,best,bestunweighted,t, numspecies)
+    if(is_pressed('q')):
+        break
     generation += 1
-    print("mutitated")
-    
-    print(" ")
+print("quit")
+write_file.close()
+plt.show()
 
-print("  ")
-print("done")
-print(run(globalbest))
-print(globalbest.draw("hi"))
-print(globalbest.fullfitness)
-#print(globalbest.draw("finalscore"))
-'''
+
+
+#TODO if to much space delete network structure when not useing

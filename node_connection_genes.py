@@ -18,7 +18,8 @@ class nodegenes():
         try:
             self.activation = a.get(activation)
         except:
-            print(a.get(activation))
+            pass
+            #print(a.get(activation))
 
     def copy(self):
         return deepcopy(self)

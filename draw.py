@@ -151,8 +151,7 @@ def addconnectionlayer(connectionlayer):
             solved = True
         else:
             guess -= 5
-    print("HERERERERERERERERERERER")
-    print(between)
+
     added = 0
     for i in range(len(between)):
         if(between[i] == 0):
@@ -164,20 +163,21 @@ def addconnectionlayer(connectionlayer):
             added += 1
 
 
-def drawit(nodefromto,layers):
+def drawit(net):
     global nodes,layers_radius,test_layers,test_nodefromto,background,points,test_layerslist,seperation
+
     pygame.display.init()
     pygame.init()
     pygame.display.set_caption('Quick Start')
 
     window_surface = pygame.display.set_mode((length, width))
 
-    print(nodefromto)
+
     background = pygame.Surface((length, width))
     background.fill(pygame.Color(255, 255, 255))
 
-    test_nodefromto = nodefromto
-    test_layers = layers
+    test_nodefromto = net.nodefromto
+    test_layers = net.layers
     nodes = {'0.0':{}}
     connections = []
     test_layersrev = list(reversed([i for i in test_layers]))
