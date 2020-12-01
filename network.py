@@ -15,7 +15,8 @@ class network():
         self.fullfitness = 0
         self.enabledgenes = []
         self.disabledgenes = {}
-        self.mutitations = []
+
+
         if(kwargs != {}):
             self.createbabynet(kwargs['parent1'],kwargs['parent2'])
         else:
@@ -91,8 +92,7 @@ class network():
                     self.enabledgenes.append(fitgene)
                     self.nodefromto[fitgene.outnode][fitgene.innode] = fitparent.disabledgenes[fitgene]
                 else:
-                    self.disabledgenes[fitgene] = fitparent.disabledgenes[fitgene] 
-        self.mutitations.append("baby was created")            
+                    self.disabledgenes[fitgene] = fitparent.disabledgenes[fitgene]            
         self.sort()
                  
     def addconnection(self, innovationnumber,globalconnectiongenes):
@@ -149,7 +149,7 @@ class network():
             self.enabledgenes.append(clas)
             weight = uniform(values.weightminmax[0],values.weightminmax[1])
             self.nodefromto[to_node][from_node] = weight
-            self.mutitations.append("created two new connections")
+
             return {'from':from_node,'to':to_node,'inno':innovationnumber,'class':clas}
         else:
             clas = globalconnectiongenes[location]['class']
@@ -158,7 +158,7 @@ class network():
                     self.enabledgenes.append(clas)
                     self.nodefromto[to_node][from_node] = self.disabledgenes[clas]
                     self.disabledgenes.pop(clas)
-                    self.mutitations.append("moved a disabled connectiongene")
+
                     return None
                 else:
                     return None
@@ -167,10 +167,11 @@ class network():
                 self.nodefromto[to_node][from_node] = weight
                 self.connectiongenes.append(clas)
                 self.enabledgenes.append(clas)
-                self.mutitations.append("added a previous connection")
+
                 return None
           
     def mutitateconnection(self,nodegenesinno,connectiongenesinno,globalsplitconnections,allconnectiongenes):
+
         if(len(self.connectiongenes)== 0):
             return None
         gene = randint(0,len(self.connectiongenes)-1)
@@ -244,7 +245,7 @@ class network():
                     self.layers[xpos].append(splitconnections['nodeinno'])
                     self.sort()
                 
-                self.mutitations.append("added a previous split connection")
+
                 for i in self.enabledgenes:
                     test = self.nodefromto[i.outnode][i.innode]
                 return None
@@ -270,7 +271,7 @@ class network():
         self.connectiongenes.append(newgene2)
         self.enabledgenes.append(newgene1)
         self.enabledgenes.append(newgene2)
-        self.mutitations.append("added a new split connection")
+
         return {'to':self.connectiongenes[gene].outnode,'from':self.connectiongenes[gene].innode,'nodeinno':nodegenesinno,'connectioninno':connectiongenesinno,'connection1class':newgene1,'connection2class':newgene2}
     
     def sort(self):
@@ -313,8 +314,6 @@ class network():
         if(values.mutitate_connection_chace >= random()):   
             #print('mutitatedconnectons')  
             values.mutitateaconnection(self)
-        
-                               
     def copy(self):
         return deepcopy(self)
         

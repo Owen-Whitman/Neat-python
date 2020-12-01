@@ -162,24 +162,24 @@ def createtestnet():
 
 def createspecies():
     for i in range(len(allnetworks)-1,-1,-1):
+
         found = False
         for b in allspecies:
             if(closeness(allnetworks[i],b.rep) < values.closeness):
                 b.members.append(allnetworks[i])
                 found = True
-                break
+
         if(not found):
             allspecies.append(species(allnetworks[i]))
+            
         allnetworks.pop(i)
             
-    if(len(allspecies)<values.species_target):
-        values.closeness -= 0.3
-    elif(len(allspecies)>values.species_target):
-        values.closeness += 0.3
-    if(values.closeness<0.3):
-        values.closeness = 0.3
+
     for i in range(len(allspecies)-1,-1,-1):
-        if(len(allspecies[i].members) <= 1): 
+        if(len(allspecies[i].members) <= 1):
+            for b in allspecies[i].members:
+
+                allnetworks.append(b)
             allspecies.pop(i)
             continue
         if(len(allspecies[i].prevbestfitness)>=15 and max(allspecies[i].prevbestfitness[:len(allspecies[i].prevbestfitness)-14])>= max(allspecies[i].prevbestfitness[len(allspecies[i].prevbestfitness)-14:])):
@@ -187,6 +187,19 @@ def createspecies():
                 allnetworks.append(b)
             allspecies.pop(i)
             continue
+    if(len(allnetworks)>=2):
+        allspecies.append(species(allnetworks[0]))
+        allnetworks.pop(0)
+        for i in range(len(allnetworks)-1,-1,-1):
+            allspecies[-1].members.append(allnetworks[i])
+            allnetworks.pop(i)
+            
+    if(len(allspecies)<values.species_target):
+        values.closeness -= 0.3
+    elif(len(allspecies)>values.species_target):
+        values.closeness += 0.3
+    if(values.closeness<0.3):
+        values.closeness = 0.3
 
 def evaulate():
     avg = 0 
@@ -199,16 +212,16 @@ def evaulate():
         if(best == 0 or a[1].fitness > best.fitness):
             best = a[1]
             
-        if(bestunweighted == 0 or a[1].fullfitness > bestunweighted.fullfitness):
-            bestunweighted = a[1]
-            
+        if(bestunweighted == 0 or a[2].fullfitness > bestunweighted.fullfitness):
+            bestunweighted = a[2]
+                
     return (avg),best,bestunweighted, len(allspecies)
     
-def mutitate(avg):
+def mutitate(avg, best):
     for i in allspecies:
         mut = i.mutitate(avg)
-        #print(len(mut))
         allnetworks.extend(mut)
+    return 0
 
 
 def setup():    
@@ -221,12 +234,14 @@ while(True):
     createspecies()
     if(len(allspecies) == 0):
         if(len(allnetworks) == 0):
-            print("here")
+            print("reset")
             setup()
+            createspecies()
         else:
             continue
     avg, best, bestunweighted, numspecies = evaulate()
-    mutitate(avg)
+
+    mutitate(avg, best)
     t = time()-t
     savedata(avg/numspecies,best,bestunweighted,t, numspecies)
     if(is_pressed('q')):
@@ -235,7 +250,3 @@ while(True):
 print("quit")
 write_file.close()
 plt.show()
-
-
-
-#TODO if to much space delete network structure when not useing

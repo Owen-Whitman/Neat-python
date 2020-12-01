@@ -12,14 +12,17 @@ class species():
         self.members_fitness = {}
         self.prevbestfitness = []
         self.sortedfitness = {}
-        self.speciesavg =  -1 
+        self.speciesavg =  -1
+
         
     def evaluate(self):
         best = 0
-
+        unweightedbest = 0
         self.speciesavg = 0 
-        for i in self.members:
-            i.fullfitness = run(i)   
+        for i in self.members: 
+            i.fullfitness = run(i)
+            if(unweightedbest == 0 or i.fullfitness> unweightedbest.fullfitness):
+                unweightedbest = i 
             fitness =  i.fullfitness/len(self.members)
             if(best == 0 or fitness > best.fitness ):
                 best = i
@@ -33,25 +36,28 @@ class species():
                 self.sortedfitness[fitness] = [i]
                 
             self.speciesavg += fitness
-        #print(len(self.members_fitness))
+
         self.speciesavg = self.speciesavg/len(self.members)
         self.prevbestfitness.append(best.fitness)
-        return [self.speciesavg, best]
+        return [self.speciesavg, best, unweightedbest]
     
 
     def mutitate(self,globalavg):
         ret_nets = []
         numofnewpopulation = floor((self.speciesavg/globalavg)*values.populationsize)
-        #print(numofnewpopulation)
+        print(numofnewpopulation)
         a = round(values.populationsize*values.top_reproduce)
         sorts = sorted(self.sortedfitness,reverse = True)
-        sortedfitness = []
+        sorted_fitness = []
         keptnet = []
         i = 0
+        if(a == 0):
+            a = 1
         #print(sorts)
+        
         while a > 0:
             if( a - len(self.sortedfitness[sorts[i]]) > 0):
-                sortedfitness.extend(self.sortedfitness[sorts[i]])
+                sorted_fitness.extend(self.sortedfitness[sorts[i]])
                 keptnet.extend([sorts[i] for b in range(len(self.sortedfitness[sorts[i]]))])
                 a -= len(self.sortedfitness[sorts[i]])
                 if(i + 1 > len(sorts) -1):
@@ -59,45 +65,50 @@ class species():
                     break
                 i += 1
             else:
-
-                sortedfitness.extend(self.sortedfitness[sorts[i]][:int(len(self.sortedfitness[sorts[i]])-a)])
+                
+                sorted_fitness.extend(self.sortedfitness[sorts[i]][:int(len(self.sortedfitness[sorts[i]])-a)])
                 keptnet.extend([sorts[i] for b in range(len(self.sortedfitness[sorts[i]][:int(len(self.sortedfitness[sorts[i]])-a)]))])
                 a = 0
 
+        a= sorted_fitness[0].copy()
+        a.connectiongenes = [i for i in sorted_fitness[0].connectiongenes]
+        a.enabledgenes = [i for i in sorted_fitness[0].enabledgenes]
+            
+        a.disabledgenes = {}
+        for i in sorted_fitness[0].disabledgenes:
+            a.disabledgenes[i] = sorted_fitness[0].disabledgenes[i]
+        ret_nets.append(a)
+
+
+
+
         newmembers = {}
         for i in range(len(keptnet)):
-            newmembers[keptnet[i]] = sortedfitness[i]
+            newmembers[keptnet[i]] = sorted_fitness[i]
         
 
         self.members_fitness = newmembers 
         #self.members = keptnet
-        if(numofnewpopulation> 1):
-            a= sortedfitness[0].copy()
-            a.connectiongenes = [i for i in sortedfitness[0].connectiongenes]
-            a.enabledgenes = [i for i in sortedfitness[0].enabledgenes]
-            
-            a.disabledgenes = {}
-            for i in sortedfitness[0].disabledgenes:
-                a.disabledgenes[i] = sortedfitness[0].disabledgenes[i]
-            ret_nets.append(a)
-            numofnewpopulation -= 1
-
-
-        self.rep = choice(sortedfitness).copy()
-
-
         
-        #print(sortedfitness)
-             
-        for i in sortedfitness:
+
+        try:
+            self.rep = choice(sorted_fitness).copy()
+        except:
+            print(len(self.members))
+            print(sorted_fitness)
+            print(self.members_fitness)
+            raise ArithmeticError
+        #print(ret_nets[0].nodefromto)     
+        for i in sorted_fitness:
             i.mutitate()
+        #print(ret_nets[0].nodefromto)               
             
-        ret_nets.extend(choices(sortedfitness,keptnet,k=floor(numofnewpopulation*0.25)))
+        ret_nets.extend(choices(sorted_fitness,keptnet,k=floor(numofnewpopulation*0.25)))
         numofnewpopulation -= floor(numofnewpopulation*0.25)
 
         while(numofnewpopulation>0):
 
-            choic = choices(sortedfitness,keptnet,k=2)
+            choic = choices(sorted_fitness,keptnet,k=2)
             person1 = choic[0]
             person2 = choic[1]
 
