@@ -297,14 +297,14 @@ class network():
         return [self.alikes[i].value for i in self.layers["1.0"]]
 
     def mutitate(self):
-        if(random()<values.weight_prebutered_chance):
+        if(random()<values.weight_mutitated_chance):
             for i in self.enabledgenes:
                 if(random()<= values.weight_random_chance):
                     newweight = uniform(values.weightminmax[0],values.weightminmax[1])
                     self.nodefromto[i.outnode][i.innode] = newweight
-                else:
+                elif(random() <= values.weight_prebutered_chance):
                     oldweight = self.nodefromto[i.outnode][i.innode]
-                    newweight = uniform(oldweight-values.weight_prebuted_added,oldweight+values.weight_prebuted_added)
+                    newweight = uniform(oldweight-values.weight_prebutered_added,oldweight+values.weight_prebutered_added)
                     self.nodefromto[i.outnode][i.innode] = newweight
         
         if(values.added_connection_chace >= random()):  

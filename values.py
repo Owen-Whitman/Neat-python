@@ -1,6 +1,6 @@
 from random import random
 from node_connection_genes import connectiongenes
-numofinputs = 3
+numofinputs = 99
 numofoutputs = 1
 
 activationfunctioninput = 'sigmoid'
@@ -10,19 +10,22 @@ weightminmax = [-2,2]
 
 c1 = 1
 c2 = 1 
-c3 = 0.4
+c3 = 0.1
 species_target = 10
 inherit_desabled = 0.75
-added_connection_chace = 0.03
-mutitate_connection_chace = 0.009
-weight_prebutered_chance = 0.8
-weight_prebuted_added = 0.2
-weight_random_chance = 0.1
+added_connection_chace = 0.075
+mutitate_connection_chace = 0.01
+weight_prebutered_chance = 0.9
+weight_prebutered_added = 0.075
+weight_random_chance = 0.025
+weight_mutitated_chance = 0.8
 
 top_reproduce = 0.5
-populationsize = 150
-closeness = 3
+populationsize = 100
+closeness = 1
 
+interspeciestestamount = 10
+vs_species_amount = 7
 
 totalnodegenes = 0
 totalconnectiongenes = 0
@@ -34,7 +37,6 @@ def setup():
     allsplitnodes = []
     totalconnectiongenes = 0 
     totalnodegenes = 0
-    populationsiz = 150
     totalnodegenes = numofinputs + numofoutputs
     for i in range(numofinputs):
         for b in range(numofoutputs):

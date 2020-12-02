@@ -1,4 +1,4 @@
-from matplotlib.pyplot import ylabel
+from random import choices, sample
 from network import network
 from species import species
 from keyboard import is_pressed
@@ -6,6 +6,7 @@ import values
 from time import time
 import matplotlib.pyplot as plt
 from os import getcwd, path
+from examples.selfbattleversion import run
 
 t0 = time()
 
@@ -29,7 +30,7 @@ ylabels = ["best network's weighted fitness", "best network's unweighted fitness
            "number of nodes for the best network", "number of connections for the best network", 
            "average fitness", "population size", "number of species", "time per generation"]
 root=getcwd()
-file_path = path.join(root,"saved","saved_data.txt")
+file_path = path.join(root,"saved","saved_data.txt") #C:\Users\owenw\Desktop\Battle snakes\local learning\Neat-python\saved\saved_data.txt
 write_file = open(file_path,'w')
 fig, axs = plt.subplots(2,4, sharex = True)
 axsummer = 0
@@ -39,26 +40,37 @@ for ax in axs.flat:
 
 values.setup()
 
-def savedata(avg,best,bestunweighted, totaltime, numspecies):
+def savedata(avg,best,bestunweighted, totaltime, numspecies, t1,t2,t3):
     global besteverscore
     # best.score bestunweighted.score, len(bestunweighted.nodegenes), len(bestunweighted.connectiongenes), avg, values.populationsize, numspecies, time
     x.append(generation)
     best_scores.append(best.fitness)
     best_unweighted_scores.append(bestunweighted.fullfitness)
     best_number_nodes.append(len(bestunweighted.nodegenes))
-    best_number_connections.append(len(bestunweighted.nodegenes))
+    best_number_connections.append(len(bestunweighted.connectiongenes))
     averages.append(avg)
     population_size.append(len(allnetworks))
     numspecies_per_generation.append(numspecies)
     time_per_generation.append(totaltime)
-    axs[0,0].plot(x,best_scores)
-    axs[0,1].plot(x,best_unweighted_scores)
-    axs[0,2].plot(x,best_number_nodes)
-    axs[0,3].plot(x,best_number_connections)
-    axs[1,0].plot(x,averages)
-    axs[1,1].plot(x,population_size)
-    axs[1,2].plot(x,numspecies_per_generation)
-    axs[1,3].plot(x,time_per_generation)
+    if(len(x) > 150):
+        start = len(x)-150
+        axs[0,0].plot(x[start:],best_scores[start:])
+        axs[0,1].plot(x[start:],best_unweighted_scores[start:])
+        axs[0,2].plot(x[start:],best_number_nodes[start:])
+        axs[0,3].plot(x[start:],best_number_connections[start:])
+        axs[1,0].plot(x[start:],averages[start:])
+        axs[1,1].plot(x[start:],population_size[start:])
+        axs[1,2].plot(x[start:],numspecies_per_generation[start:])
+        axs[1,3].plot(x[start:],time_per_generation[start:])
+    else:
+        axs[0,0].plot(x,best_scores)
+        axs[0,1].plot(x,best_unweighted_scores)
+        axs[0,2].plot(x,best_number_nodes)
+        axs[0,3].plot(x,best_number_connections)
+        axs[1,0].plot(x,averages)
+        axs[1,1].plot(x,population_size)
+        axs[1,2].plot(x,numspecies_per_generation)
+        axs[1,3].plot(x,time_per_generation)
     plt.pause(0.05)
     write_file.write("generation"+ str(generation) +":\n")
     write_file.write("best score weighted: "+ str(best_scores[-1])+ "\n")
@@ -68,7 +80,10 @@ def savedata(avg,best,bestunweighted, totaltime, numspecies):
     write_file.write("average score for this generation: "+ str(averages[-1])+ "\n")
     write_file.write("population size: "+ str(population_size[-1])+ "\n")
     write_file.write("number of species: "+ str(numspecies_per_generation[-1])+ "\n")
-    write_file.write("time for this generation: "+ str(time_per_generation[-1])+ "\n")
+    write_file.write("time took to create species" + str(t1) + "\n")
+    write_file.write("time took to evaulate" + str(t2) + "\n")
+    write_file.write("time took to mutitate" + str(t3) + "\n")
+    write_file.write("time took for this generation: "+ str(time_per_generation[-1])+ "\n")
     if(besteverscore == 0 or bestunweighted.fullfitness  > besteverscore):
         besteverscore = bestunweighted.fullfitness
     write_file.write("best score so far: " + str(besteverscore) + "\n")
@@ -162,7 +177,7 @@ def createtestnet():
 
 def createspecies():
     for i in range(len(allnetworks)-1,-1,-1):
-
+        
         found = False
         for b in allspecies:
             if(closeness(allnetworks[i],b.rep) < values.closeness):
@@ -193,33 +208,91 @@ def createspecies():
         for i in range(len(allnetworks)-1,-1,-1):
             allspecies[-1].members.append(allnetworks[i])
             allnetworks.pop(i)
-            
+                
     if(len(allspecies)<values.species_target):
-        values.closeness -= 0.3
+        values.closeness -= 0.1 * (1-(len(allspecies)/values.species_target))
     elif(len(allspecies)>values.species_target):
-        values.closeness += 0.3
-    if(values.closeness<0.3):
-        values.closeness = 0.3
+        
+        values.closeness += 0.3 * ((len(allspecies)/values.species_target)-1)
+
+    if(values.closeness<0.2):
+        values.closeness = 0.2
+
 
 def evaulate():
     avg = 0 
     best = 0
+    bests = {}
     bestunweighted = 0
+    vstestamount = values.vs_species_amount
     for i in allspecies:
         a = i.evaluate()
-        
-        avg += a[0]
-        if(best == 0 or a[1].fitness > best.fitness):
-            best = a[1]
+        bests[a[0]] = i
+        if(best == 0 or a[0].fitness > best.fitness):
+            best = a[0]
             
-        if(bestunweighted == 0 or a[2].fullfitness > bestunweighted.fullfitness):
-            bestunweighted = a[2]
-                
-    return (avg),best,bestunweighted, len(allspecies)
+        if(bestunweighted == 0 or a[1].fullfitness > bestunweighted.fullfitness):
+            bestunweighted = a[1]
+            
+    played = {}    
+    done = {}
+    if(len(bests) == 1):
+        bests[list(bests)[0]].speciesavg = list(bests)[0].fitness
+        avg = list(bests)[0].fitness
+
+    elif(len(bests) < 4):
+        for i in bests:
+            played[i] = 0
+        for b in range(vstestamount):
+            dic = list(played)
+            tocopy = sample(dic, k = 4-len(played))  
+            dic.extend(tocopy)
+            ret = run(dic)
+            for i in ret:
+                bests[i].speciesavg += ret[i]
+                played[i] += 1 
+        for i in list(played):
+           bests[i].speciesavg /= played[i] 
+           avg += bests[i].speciesavg
+             
+    else:
+        for network in bests:
+            played[network] = vstestamount
+        while(len(played) != 0):
+            dic = list(played)
+            if(len(dic) >= 4):
+                ret = run(sample(dic, k=4))
+                for i in ret:
+                    bests[i].speciesavg += ret[i]
+                    played[i] -= 1
+                    if(played[i] == 0):
+                        done[i] = vstestamount
+                        played.pop(i)
+
+            else:
+                finones =  sample(list(done), k = 4-len(dic))
+                dic.extend(finones)
+                ret = run(dic)
+                for i in ret:
+                    bests[i].speciesavg += ret[i]
+                    if(i in finones):
+                        done[i] += 1
+                    else:
+                        played[i] -= 1
+                        if(played[i] == 0):
+                            done[i] = vstestamount
+                            played.pop(i)
+
+        for i in list(done):
+            bests[i].speciesavg /= done[i]
+            avg += bests[i].speciesavg 
+                        
+    #print(avg,best,bestunweighted)
+    return avg,best,bestunweighted, len(allspecies)
     
 def mutitate(avg, best):
     for i in allspecies:
-        mut = i.mutitate(avg)
+        mut = i.mutitate(avg) 
         allnetworks.extend(mut)
     return 0
 
@@ -232,6 +305,8 @@ setup()
 while(True):
     t = time()
     createspecies()
+    t1 = time() - t
+    #print(t1, "t1")
     if(len(allspecies) == 0):
         if(len(allnetworks) == 0):
             print("reset")
@@ -240,10 +315,13 @@ while(True):
         else:
             continue
     avg, best, bestunweighted, numspecies = evaulate()
-
+    t2 = time() - t1
+    #print(t2, "t2")
     mutitate(avg, best)
+    t3 = time() - t2
+    #print(t3, "t3")
     t = time()-t
-    savedata(avg/numspecies,best,bestunweighted,t, numspecies)
+    savedata(avg/numspecies,best,bestunweighted,t, numspecies, t1,t2,t3)
     if(is_pressed('q')):
         break
     generation += 1

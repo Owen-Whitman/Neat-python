@@ -1,8 +1,8 @@
 
 import values
-from random import random, choice, choices
+from random import random, choice, choices, sample
 import network
-from examples.xor import run
+from examples.selfbattleversion import run
 from math import floor, ceil
 class species():
 
@@ -12,40 +12,107 @@ class species():
         self.members_fitness = {}
         self.prevbestfitness = []
         self.sortedfitness = {}
-        self.speciesavg =  -1
+        self.speciesavg =  0
 
         
     def evaluate(self):
         best = 0
         unweightedbest = 0
-        self.speciesavg = 0 
-        for i in self.members: 
-            i.fullfitness = run(i)
-            if(unweightedbest == 0 or i.fullfitness> unweightedbest.fullfitness):
-                unweightedbest = i 
-            fitness =  i.fullfitness/len(self.members)
-            if(best == 0 or fitness > best.fitness ):
-                best = i
+        self.speciesavg = 0
+        testamount = values.interspeciestestamount 
+        
+        played = {}
+        
+        done = {}
+        
             
-            i.fitness = fitness
-            self.members_fitness[i] = fitness
-            added = False
-            if(fitness in self.sortedfitness):
-                self.sortedfitness[fitness].append(i)
-            else:
-                self.sortedfitness[fitness] = [i]
+        
+        if(len(self.members)<4):
+            for i in self.members:
+                played[i] = 0
+            for b in range(testamount):
+                dic = list(played)
+                if(len(self.members) == 1):
+                    tocopy = [self.members[0] for i in range(testamount)]
+                else:
+                    tocopy = sample(dic, k = 4-len(self.members))
+                dic.extend(tocopy)
+                ret = run(dic)
+                for i in ret:
+                    i.fullfitness += ret[i]
+                    played[i] += 1
+            
                 
-            self.speciesavg += fitness
-
-        self.speciesavg = self.speciesavg/len(self.members)
+            for i in list(played):
+                i.fullfitness /= played[i]
+                i.fitness = i.fullfitness/len(self.members)
+                if(best == 0 or i.fitness > best.fitness ):
+                    best = i
+                if(unweightedbest == 0 or i.fullfitness > best.fullfitness):
+                    unweightedbest = i  
+                self.members_fitness[i] = i.fitness
+                added = False
+                if(i.fitness in self.sortedfitness):
+                    self.sortedfitness[i.fitness].append(i)
+                else:
+                    self.sortedfitness[i.fitness] = [i]
+                
+                
+                    
+                    
+        else:
+            for i in self.members:
+                played[i] = testamount 
+            while(len(played) != 0):
+                dic = list(played)
+                #print(dic)
+                if(len(dic)>= 4):
+                    ret = run(sample(dic, k = 4))
+                    for i in ret:
+                        i.fullfitness += ret[i]
+                        played[i] -= 1
+                        
+                        if(played[i] == 0):
+                            done[i] = testamount
+                            played.pop(i)
+                            
+                else:
+                    finones =  sample(list(done), k = 4-len(dic))
+                    dic.extend(finones)
+                    ret = run(dic)
+                    for i in ret:
+                        i.fullfitness += ret[i]
+                        if(i in finones):
+                            #print(i)
+                            done[i] += 1
+                        else:
+                            played[i] -= 1
+                            if(played[i] == 0):
+                                done[i] = testamount
+                                played.pop(i)
+                        
+            for i in list(done):
+                i.fullfitness /= done[i]
+                i.fitness = i.fullfitness/len(self.members)
+                if(best == 0 or i.fitness > best.fitness ):
+                    best = i
+                if(unweightedbest == 0 or i.fullfitness > best.fullfitness):
+                    unweightedbest = i  
+                self.members_fitness[i] = i.fitness
+                added = False
+                if(i.fitness in self.sortedfitness):
+                    self.sortedfitness[i.fitness].append(i)
+                else:
+                    self.sortedfitness[i.fitness] = [i]
+        
         self.prevbestfitness.append(best.fitness)
-        return [self.speciesavg, best, unweightedbest]
+        return [best, unweightedbest]
     
 
     def mutitate(self,globalavg):
         ret_nets = []
-        numofnewpopulation = floor((self.speciesavg/globalavg)*values.populationsize)
-        print(numofnewpopulation)
+        numofnewpopulation = round((self.speciesavg/globalavg)*values.populationsize)
+        #print(numofnewpopulation, self.speciesavg, globalavg)
         a = round(values.populationsize*values.top_reproduce)
         sorts = sorted(self.sortedfitness,reverse = True)
         sorted_fitness = []
@@ -53,8 +120,7 @@ class species():
         i = 0
         if(a == 0):
             a = 1
-        #print(sorts)
-        
+
         while a > 0:
             if( a - len(self.sortedfitness[sorts[i]]) > 0):
                 sorted_fitness.extend(self.sortedfitness[sorts[i]])
@@ -69,7 +135,7 @@ class species():
                 sorted_fitness.extend(self.sortedfitness[sorts[i]][:int(len(self.sortedfitness[sorts[i]])-a)])
                 keptnet.extend([sorts[i] for b in range(len(self.sortedfitness[sorts[i]][:int(len(self.sortedfitness[sorts[i]])-a)]))])
                 a = 0
-
+        
         a= sorted_fitness[0].copy()
         a.connectiongenes = [i for i in sorted_fitness[0].connectiongenes]
         a.enabledgenes = [i for i in sorted_fitness[0].enabledgenes]
@@ -78,8 +144,9 @@ class species():
         for i in sorted_fitness[0].disabledgenes:
             a.disabledgenes[i] = sorted_fitness[0].disabledgenes[i]
         ret_nets.append(a)
-
-
+        if(numofnewpopulation > 1):
+            numofnewpopulation -= 1
+    
 
 
         newmembers = {}
@@ -101,10 +168,34 @@ class species():
         #print(ret_nets[0].nodefromto)     
         for i in sorted_fitness:
             i.mutitate()
-        #print(ret_nets[0].nodefromto)               
+        #print(sorted_fitness)              
+        weights = []
+        for i in keptnet:
+            weights.append(i/sum(keptnet))
+        unbabied_size = floor(numofnewpopulation*0.25)
+        counter = 0
+        addedany = False
+        while unbabied_size != 0:
+            if(sorted_fitness[counter] not in ret_nets and weights[counter]>random()):
+                ret_nets.append(sorted_fitness[counter])
+                unbabied_size -= 1
+                addedany = True
+            if(counter+1 == len(weights)):
+                if(not addedany):
+                    break
+                else:
+                    counter = 0
+                    addedany = False
+            else:
+                counter += 1
+        numofnewpopulation -=  floor(numofnewpopulation*0.25) - unbabied_size
             
-        ret_nets.extend(choices(sorted_fitness,keptnet,k=floor(numofnewpopulation*0.25)))
-        numofnewpopulation -= floor(numofnewpopulation*0.25)
+        for i in range(len(ret_nets)):
+            if(ret_nets[i] in ret_nets[:i] or ret_nets[i] in ret_nets[i+1:]):
+                print("duplicate added!")
+                print(ret_nets[i], i)
+                raise ValueError
+
 
         while(numofnewpopulation>0):
 
@@ -123,7 +214,11 @@ class species():
         self.members_fitness = {}
         self.sortedfitness = {}
         #print(len(ret_nets))
-
+        for i in range(len(ret_nets)):
+            if(ret_nets[i] in ret_nets[:i] or ret_nets[i] in ret_nets[i+1:]):
+                print("duplicate added!")
+                raise ValueError
+        #print(len(ret_nets))
         return ret_nets
 
         #print(max(self.members_fitness),self.members_fitness,numofnewpopulation,"YEEE")
