@@ -5,8 +5,8 @@ from time import sleep
 maxhealth = 100
 boardsize = 11
 
-pointsforfirst = 40
-pointsforsecond = 30
+pointsforfirst = 30
+pointsforsecond = 20
 pointsforthird = 10
 killing = 30
 killingheadtohead = 40
