@@ -228,17 +228,15 @@ def evaulate():
     for i in allspecies:
         a = i.evaluate()
         bests[a[0]] = i
-        if(best == 0 or a[0].fitness > best.fitness):
-            best = a[0]
-            
-        if(bestunweighted == 0 or a[1].fullfitness > bestunweighted.fullfitness):
-            bestunweighted = a[1]
+        
             
     played = {}    
     done = {}
     if(len(bests) == 1):
         bests[list(bests)[0]].speciesavg = list(bests)[0].fitness
         avg = list(bests)[0].fitness
+        best = list(bests)[0]
+        bestunweighted = list(bests)[0]
 
     elif(len(bests) < 4):
         for i in bests:
@@ -253,6 +251,9 @@ def evaulate():
                 played[i] += 1 
         for i in list(played):
            bests[i].speciesavg /= played[i] 
+           if(best == 0 or bests[i].speciesavg > bests[best].speciesavg):
+                best = i
+                bestunweighted = i
            avg += bests[i].speciesavg
              
     else:
@@ -285,6 +286,10 @@ def evaulate():
 
         for i in list(done):
             bests[i].speciesavg /= done[i]
+
+            if(best == 0 or bests[i].speciesavg > bests[best].speciesavg):
+                best = i
+                bestunweighted = i
             avg += bests[i].speciesavg 
                         
     #print(avg,best,bestunweighted)
@@ -322,8 +327,8 @@ while(True):
     #print(t3, "t3")
     t = time()-t
     savedata(avg/numspecies,best,bestunweighted,t, numspecies, t1,t2,t3)
-    if(is_pressed('q')):
-        break
+    '''if(is_pressed('q')):
+        break'''
     generation += 1
 print("quit")
 write_file.close()

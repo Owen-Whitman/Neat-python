@@ -9,9 +9,9 @@ activationfunctionoutinput = 'sigmoid'
 weightminmax = [-2,2]
 
 c1 = 1
-c2 = 1 
+c2 = 1.2
 c3 = 0.1
-species_target = 10
+species_target = 20
 inherit_desabled = 0.75
 added_connection_chace = 0.075
 mutitate_connection_chace = 0.01
@@ -21,11 +21,11 @@ weight_random_chance = 0.025
 weight_mutitated_chance = 0.8
 
 top_reproduce = 0.5
-populationsize = 100
+populationsize = 300
 closeness = 1
 
-interspeciestestamount = 10
-vs_species_amount = 7
+interspeciestestamount = 15
+vs_species_amount = 15
 
 totalnodegenes = 0
 totalconnectiongenes = 0
